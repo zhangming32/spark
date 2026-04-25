@@ -1,0 +1,139 @@
+{
+  "data_manifest_id": "DM_ES_001",
+  "generation_timestamp": "2026-04-25T10:40:00Z",
+  "status": "success",
+  
+  "input_source": "./output/es_test_cases.json",
+  "test_case_ids": ["TC_ES_FUNC_001", "TC_ES_FUNC_002", "TC_ES_FUNC_003", "TC_ES_FUNC_004"],
+  
+  "strategy": "generated",
+  "strategy_reason": "日志数据需要定制字段(timestamp, level, message, service, host)，使用Skill生成",
+  
+  "log_data_requirements": {
+    "schema": {
+      "timestamp": {"type": "date", "format": "ISO8601", "example": "2024-01-15T10:30:00Z"},
+      "level": {"type": "keyword", "values": ["ERROR", "WARN", "INFO", "DEBUG"], "distribution": {"ERROR": 0.1, "WARN": 0.2, "INFO": 0.6, "DEBUG": 0.1}},
+      "message": {"type": "text", "length_range": "10-200 chars"},
+      "service": {"type": "keyword", "values": ["user-service", "order-service", "payment-service", "api-gateway", "inventory-service"]},
+      "host": {"type": "keyword", "values": ["server-01", "server-02", "server-03", "server-04"]}
+    },
+    "data_sizes": {
+      "small": {"docs": 100, "file": "logs_small.json"},
+      "medium": {"docs": 10000, "file": "logs_medium.json"},
+      "large": {"docs": 100000, "file": "logs_large.json"}
+    }
+  },
+  
+  "data_files": [
+    {
+      "file_id": "DF_ES_001",
+      "path": "./test_data/es_logs/logs_small.json",
+      "type": "input",
+      "format": "JSON",
+      "docs_count": 100,
+      "description": "小规模日志数据，用于功能测试",
+      "schema": {
+        "timestamp": "date",
+        "level": "keyword",
+        "message": "text",
+        "service": "keyword",
+        "host": "keyword"
+      }
+    },
+    {
+      "file_id": "DF_ES_002",
+      "path": "./test_data/es_logs/logs_medium.json",
+      "type": "input",
+      "format": "JSON",
+      "docs_count": 10000,
+      "description": "中等规模日志数据，用于集成和性能测试"
+    },
+    {
+      "file_id": "DF_ES_003",
+      "path": "./test_data/es_logs/logs_error_only.json",
+      "type": "input",
+      "format": "JSON",
+      "docs_count": 50,
+      "description": "仅ERROR级别日志，用于搜索测试"
+    },
+    {
+      "file_id": "DF_ES_004",
+      "path": "./test_data/es_logs/logs_empty.json",
+      "type": "input",
+      "format": "JSON",
+      "docs_count": 0,
+      "description": "空日志文件，用于容错测试"
+    },
+    {
+      "file_id": "DF_ES_005",
+      "path": "./test_data/es_logs/expected_agg_result.json",
+      "type": "expected_output",
+      "format": "JSON",
+      "docs_count": 4,
+      "description": "预期聚合结果(level统计)"
+    }
+  ],
+  
+  "scripts_generated": [
+    {
+      "script_path": "./test_data/es_logs/scripts/generate_log_data.py",
+      "description": "Python脚本生成日志数据",
+      "language": "Python3"
+    }
+  ],
+  
+  "es_index_mapping": {
+    "index_name": "logs",
+    "mappings": {
+      "properties": {
+        "timestamp": {"type": "date"},
+        "level": {"type": "keyword"},
+        "message": {"type": "text", "analyzer": "standard"},
+        "service": {"type": "keyword"},
+        "host": {"type": "keyword"}
+      }
+    },
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  },
+  
+  "sample_documents": [
+    {
+      "timestamp": "2024-01-15T10:30:00Z",
+      "level": "ERROR",
+      "message": "Database connection failed: timeout after 30s",
+      "service": "user-service",
+      "host": "server-01"
+    },
+    {
+      "timestamp": "2024-01-15T10:31:00Z",
+      "level": "WARN",
+      "message": "High memory usage detected: 85% utilized",
+      "service": "order-service",
+      "host": "server-02"
+    },
+    {
+      "timestamp": "2024-01-15T10:32:00Z",
+      "level": "INFO",
+      "message": "User login successful: user_id=12345",
+      "service": "api-gateway",
+      "host": "server-03"
+    },
+    {
+      "timestamp": "2024-01-15T10:33:00Z",
+      "level": "DEBUG",
+      "message": "Cache hit for key: session_user_12345",
+      "service": "user-service",
+      "host": "server-01"
+    }
+  ],
+  
+  "validation": {
+    "json_format_valid": true,
+    "schema_match": true,
+    "timestamp_format_valid": true,
+    "level_values_valid": true
+  }
+}

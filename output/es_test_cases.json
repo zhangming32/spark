@@ -1,0 +1,511 @@
+{
+  "test_suite": {
+    "suite_id": "TS_ES_001",
+    "suite_name": "Elasticsearch日志分析搜索测试",
+    "timestamp": "2026-04-25T10:30:00Z",
+    "status": "success",
+    
+    "scenario_type": "functional",
+    "scenario_description": "测试Elasticsearch日志分析搜索核心功能",
+    
+    "components": ["Elasticsearch"],
+    "role_sequence_validation": {
+      "sequence": "processor",
+      "valid": true,
+      "reason": "单组件功能测试，Elasticsearch作为搜索引擎执行日志索引、搜索、聚合"
+    },
+    
+    "component_roles": {
+      "Elasticsearch": {
+        "roles": ["source", "processor", "sink"],
+        "test_focus": "processor - 日志分析搜索"
+      }
+    },
+    
+    "test_case_summary": {
+      "functional_count": 8,
+      "integration_count": 3,
+      "fault_tolerance_count": 6,
+      "performance_count": 4,
+      "total_count": 21
+    },
+    
+    "test_cases": {
+      "functional": [
+        {
+          "case_id": "TC_ES_FUNC_001",
+          "case_name": "创建日志索引",
+          "component": "Elasticsearch",
+          "role": "sink",
+          "priority": "P1",
+          "description": "创建logs索引，定义日志数据mapping",
+          "api": "PUT /logs",
+          "steps": [
+            {"step": 1, "action": "create_index", "params": {"index": "logs", "mappings": "log_schema"}}
+          ],
+          "expected_result": {
+            "status": "success",
+            "acknowledged": true,
+            "index_exists": true
+          },
+          "input_data": {
+            "index_name": "logs",
+            "mappings": {
+              "properties": {
+                "timestamp": {"type": "date"},
+                "level": {"type": "keyword"},
+                "message": {"type": "text"},
+                "service": {"type": "keyword"},
+                "host": {"type": "keyword"}
+              }
+            }
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_002",
+          "case_name": "索引单条日志文档",
+          "component": "Elasticsearch",
+          "role": "sink",
+          "priority": "P1",
+          "description": "写入单条日志文档到logs索引",
+          "api": "PUT /logs/_doc/{id}",
+          "input_data": {
+            "document": {
+              "timestamp": "2024-01-15T10:30:00Z",
+              "level": "ERROR",
+              "message": "Connection failed to database",
+              "service": "user-service",
+              "host": "server-01"
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "result": "created",
+            "doc_id": "auto-generated or specified"
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_003",
+          "case_name": "批量索引日志文档",
+          "component": "Elasticsearch",
+          "role": "sink",
+          "priority": "P1",
+          "description": "批量写入多条日志文档",
+          "api": "POST /_bulk",
+          "input_data": {
+            "docs_count": 100,
+            "bulk_size": "small"
+          },
+          "expected_result": {
+            "status": "success",
+            "items_count": 100,
+            "errors": false
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_004",
+          "case_name": "全文搜索日志",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P1",
+          "description": "使用match查询搜索日志内容",
+          "api": "GET /logs/_search",
+          "query": {
+            "query": {
+              "match": {
+                "message": "error"
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "hits_count": ">0",
+            "all_matches_contain_error": true
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_005",
+          "case_name": "按日志级别过滤",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P1",
+          "description": "使用term查询过滤ERROR级别日志",
+          "api": "GET /logs/_search",
+          "query": {
+            "query": {
+              "term": {
+                "level": "ERROR"
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "all_results_level": "ERROR"
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_006",
+          "case_name": "时间范围查询",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P1",
+          "description": "使用range查询指定时间范围",
+          "api": "GET /logs/_search",
+          "query": {
+            "query": {
+              "range": {
+                "timestamp": {
+                  "gte": "2024-01-01",
+                  "lte": "2024-01-31"
+                }
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "all_results_in_range": true
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_007",
+          "case_name": "布尔组合查询",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P2",
+          "description": "使用bool查询组合多个条件",
+          "api": "GET /logs/_search",
+          "query": {
+            "query": {
+              "bool": {
+                "must": [{"term": {"level": "ERROR"}}],
+                "filter": [{"range": {"timestamp": {"gte": "now-1h"}}}]
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "all_match_conditions": true
+          }
+        },
+        {
+          "case_id": "TC_ES_FUNC_008",
+          "case_name": "获取日志文档",
+          "component": "Elasticsearch",
+          "role": "source",
+          "priority": "P1",
+          "description": "根据ID获取指定日志文档",
+          "api": "GET /logs/_doc/{id}",
+          "expected_result": {
+            "status": "success",
+            "found": true,
+            "_source": "document_content"
+          }
+        }
+      ],
+      
+      "aggregation": [
+        {
+          "case_id": "TC_ES_AGG_001",
+          "case_name": "日志级别统计聚合",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P1",
+          "description": "统计各日志级别的数量",
+          "api": "GET /logs/_search",
+          "query": {
+            "size": 0,
+            "aggs": {
+              "level_stats": {
+                "terms": {
+                  "field": "level"
+                }
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "buckets": ["ERROR", "WARN", "INFO", "DEBUG"],
+            "each_bucket_has_count": true
+          }
+        },
+        {
+          "case_id": "TC_ES_AGG_002",
+          "case_name": "服务日志统计聚合",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P2",
+          "description": "统计各服务的日志数量",
+          "api": "GET /logs/_search",
+          "query": {
+            "size": 0,
+            "aggs": {
+              "service_stats": {
+                "terms": {
+                  "field": "service",
+                  "size": 10
+                }
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "top_services": "service list with counts"
+          }
+        },
+        {
+          "case_id": "TC_ES_AGG_003",
+          "case_name": "时间序列聚合",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P2",
+          "description": "按小时统计日志数量变化",
+          "api": "GET /logs/_search",
+          "query": {
+            "size": 0,
+            "aggs": {
+              "logs_over_time": {
+                "date_histogram": {
+                  "field": "timestamp",
+                  "calendar_interval": "hour"
+                }
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "time_buckets": "hourly buckets with counts"
+          }
+        },
+        {
+          "case_id": "TC_ES_AGG_004",
+          "case_name": "嵌套聚合分析",
+          "component": "Elasticsearch",
+          "role": "processor",
+          "priority": "P3",
+          "description": "按服务分组后再按级别聚合",
+          "api": "GET /logs/_search",
+          "query": {
+            "size": 0,
+            "aggs": {
+              "services": {
+                "terms": {"field": "service"},
+                "aggs": {
+                  "levels": {
+                    "terms": {"field": "level"}
+                  }
+                }
+              }
+            }
+          },
+          "expected_result": {
+            "status": "success",
+            "nested_aggregation": "service -> level breakdown"
+          }
+        }
+      ],
+      
+      "integration": [
+        {
+          "case_id": "TC_ES_INT_001",
+          "case_name": "Kafka-ES日志流测试",
+          "data_flow": "Kafka -> Elasticsearch",
+          "priority": "P2",
+          "description": "测试从Kafka接收日志写入ES",
+          "steps": [
+            {"step": 1, "action": "send_log_to_kafka", "topic": "logs"},
+            {"step": 2, "action": "es_consumer_index", "expected": "doc indexed"}
+          ],
+          "expected_result": {
+            "kafka_message_consumed": true,
+            "es_document_indexed": true
+          }
+        },
+        {
+          "case_id": "TC_ES_INT_002",
+          "case_name": "Logstash-ES数据流测试",
+          "data_flow": "Logstash -> Elasticsearch",
+          "priority": "P2",
+          "description": "测试Logstash管道写入ES",
+          "expected_result": {
+            "pipeline_running": true,
+            "data_indexed": true
+          }
+        },
+        {
+          "case_id": "TC_ES_INT_003",
+          "case_name": "Spark-ES读写测试",
+          "data_flow": "Spark -> Elasticsearch -> Spark",
+          "priority": "P2",
+          "description": "测试Spark读写ES数据",
+          "expected_result": {
+            "spark_write_success": true,
+            "es_data_exists": true,
+            "spark_read_success": true
+          }
+        }
+      ],
+      
+      "fault_tolerance": [
+        {
+          "case_id": "TC_ES_FT_001",
+          "case_name": "索引不存在错误",
+          "component": "Elasticsearch",
+          "priority": "P2",
+          "description": "查询不存在的索引",
+          "api": "GET /nonexistent_index/_search",
+          "expected_result": {
+            "status": "error",
+            "error_type": "index_not_found_exception",
+            "error_message": "no such index"
+          }
+        },
+        {
+          "case_id": "TC_ES_FT_002",
+          "case_name": "文档不存在查询",
+          "component": "Elasticsearch",
+          "priority": "P2",
+          "description": "获取不存在的文档ID",
+          "api": "GET /logs/_doc/nonexistent_id",
+          "expected_result": {
+            "status": "success",
+            "found": false,
+            "handling": "正确返回found=false"
+          }
+        },
+        {
+          "case_id": "TC_ES_FT_003",
+          "case_name": "空索引查询",
+          "component": "Elasticsearch",
+          "priority": "P2",
+          "description": "查询空索引",
+          "input_data": {"docs_count": 0},
+          "expected_result": {
+            "status": "success",
+            "hits_count": 0,
+            "handling": "正确返回空结果"
+          }
+        },
+        {
+          "case_id": "TC_ES_FT_004",
+          "case_name": "无效QueryDSL",
+          "component": "Elasticsearch",
+          "priority": "P2",
+          "description": "发送无效的查询语法",
+          "query": {"query": {"invalid_field": "value"}},
+          "expected_result": {
+            "status": "error",
+            "error_type": "parsing_exception",
+            "handling": "正确返回语法错误"
+          }
+        },
+        {
+          "case_id": "TC_ES_FT_005",
+          "case_name": "批量写入部分失败",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "description": "批量写入包含错误文档",
+          "input_data": {"mix_valid_invalid_docs": true},
+          "expected_result": {
+            "status": "partial_success",
+            "errors_array": true,
+            "handling": "正确标识失败项"
+          }
+        },
+        {
+          "case_id": "TC_ES_FT_006",
+          "case_name": "字段类型冲突",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "description": "写入与mapping冲突的数据类型",
+          "input_data": {"field_type_mismatch": true},
+          "expected_result": {
+            "status": "error",
+            "error_type": "mapper_parsing_exception"
+          }
+        }
+      ],
+      
+      "performance": [
+        {
+          "case_id": "TC_ES_PERF_001",
+          "case_name": "小数据量索引性能",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "data_size": "small",
+          "docs": 100,
+          "description": "测试索引100条日志的性能",
+          "expected_result": {
+            "threshold_ms": 1000,
+            "baseline": {"index_time_ms": 500}
+          }
+        },
+        {
+          "case_id": "TC_ES_PERF_002",
+          "case_name": "中等数据量索引性能",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "data_size": "medium",
+          "docs": 10000,
+          "description": "测试批量索引10000条日志的性能",
+          "expected_result": {
+            "threshold_ms": 5000,
+            "baseline": {"bulk_time_ms": 3000}
+          }
+        },
+        {
+          "case_id": "TC_ES_PERF_003",
+          "case_name": "搜索查询性能",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "data_size": "medium",
+          "docs": 10000,
+          "description": "测试在10000条日志中搜索的性能",
+          "expected_result": {
+            "threshold_ms": 100,
+            "baseline": {"search_time_ms": 50}
+          }
+        },
+        {
+          "case_id": "TC_ES_PERF_004",
+          "case_name": "聚合分析性能",
+          "component": "Elasticsearch",
+          "priority": "P3",
+          "data_size": "medium",
+          "docs": 10000,
+          "description": "测试聚合统计性能",
+          "expected_result": {
+            "threshold_ms": 200,
+            "baseline": {"agg_time_ms": 100}
+          }
+        }
+      ]
+    },
+    
+    "data_requirements": {
+      "log_data_schema": {
+        "timestamp": {"type": "date", "format": "ISO8601", "example": "2024-01-15T10:30:00Z"},
+        "level": {"type": "keyword", "values": ["ERROR", "WARN", "INFO", "DEBUG"]},
+        "message": {"type": "text", "length": "10-500 chars"},
+        "service": {"type": "keyword", "values": ["user-service", "order-service", "payment-service", "api-gateway"]},
+        "host": {"type": "keyword", "values": ["server-01", "server-02", "server-03"]}
+      },
+      "data_sizes": {
+        "small": {"docs": 100, "purpose": "功能测试"},
+        "medium": {"docs": 10000, "purpose": "集成/性能测试"},
+        "large": {"docs": 100000, "purpose": "性能测试"}
+      }
+    },
+    
+    "environment_requirements": {
+      "elasticsearch": {
+        "version": "8.x",
+        "nodes": 1,
+        "port": 9200,
+        "config": {
+          "cluster.name": "test_cluster",
+          "discovery.type": "single-node"
+        }
+      }
+    }
+  }
+}

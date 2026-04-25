@@ -1,0 +1,18 @@
+[
+  {
+    "level": "ERROR",
+    "count": 10
+  },
+  {
+    "level": "WARN",
+    "count": 20
+  },
+  {
+    "level": "INFO",
+    "count": 60
+  },
+  {
+    "level": "DEBUG",
+    "count": 10
+  }
+]

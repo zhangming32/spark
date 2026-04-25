@@ -1,0 +1,129 @@
+{
+  "prompt_id": "P_ES_001",
+  "timestamp": "2026-04-25T10:20:00Z",
+  "original_input": "Elasticsearch是日志分析搜索的核心组件，输出其自动化脚本",
+  "status": "success",
+  "errors": [],
+  
+  "parsed_elements": {
+    "scenario_type": "functional",
+    "scenario_description": "测试Elasticsearch日志分析搜索核心功能：索引创建、日志检索、聚合分析",
+    
+    "components": [
+      {
+        "name": "Elasticsearch",
+        "role": "processor",
+        "operation": "index_search_aggregate",
+        "confidence": 1.0,
+        "position": 0,
+        "type": "search_engine"
+      }
+    ],
+    
+    "data_flow": {
+      "flow_type": "single_component",
+      "sequence": ["Elasticsearch.index", "Elasticsearch.search", "Elasticsearch.aggregate"],
+      "description": "Elasticsearch日志分析搜索流程",
+      "role_sequence": "processor",
+      "valid": true,
+      "validation_reason": "单组件功能测试场景"
+    },
+    
+    "data_requirements": {
+      "input": {
+        "source": "log_data",
+        "type": "log_entries",
+        "format": "JSON",
+        "size": "medium",
+        "estimated_docs": 10000,
+        "fields": ["timestamp", "level", "message", "service", "host"]
+      },
+      "processing": {
+        "type": "search_engine",
+        "operations": ["index", "search", "aggregate", "filter"],
+        "logic_description": "创建索引、写入日志数据、执行搜索查询、聚合统计分析"
+      },
+      "output": {
+        "target": "search_results",
+        "type": "query_results",
+        "format": "JSON",
+        "expected_docs": "取决于查询条件"
+      }
+    },
+    
+    "validation_points": [
+      {
+        "point_id": "VP_ES_001",
+        "point": "index_creation",
+        "description": "索引创建成功验证",
+        "priority": "P1",
+        "assertion_type": "index_exists"
+      },
+      {
+        "point_id": "VP_ES_002",
+        "point": "document_indexing",
+        "description": "文档索引成功验证",
+        "priority": "P1",
+        "assertion_type": "doc_count_match"
+      },
+      {
+        "point_id": "VP_ES_003",
+        "point": "search_accuracy",
+        "description": "搜索结果准确性验证",
+        "priority": "P1",
+        "assertion_type": "search_result_correct"
+      },
+      {
+        "point_id": "VP_ES_004",
+        "point": "aggregation_correctness",
+        "description": "聚合统计正确性验证",
+        "priority": "P1",
+        "assertion_type": "agg_result_match"
+      }
+    ],
+    
+    "test_coverage_requirements": {
+      "single_component": true,
+      "component_combination": false,
+      "fault_tolerance": true,
+      "performance": true,
+      "estimated_test_count": 20
+    },
+    
+    "es_specific_features": {
+      "core_functions": [
+        "索引管理(Index Management)",
+        "文档操作(Document CRUD)",
+        "全文搜索(Full-text Search)",
+        "聚合分析(Aggregations)",
+        "日志查询(Log Queries)"
+      ],
+      "search_types": [
+        "match_query",
+        "term_query",
+        "range_query",
+        "bool_query",
+        "wildcard_query"
+      ],
+      "aggregation_types": [
+        "terms_aggregation",
+        "date_histogram_aggregation",
+        "stats_aggregation",
+        "avg_sum_count"
+      ]
+    }
+  },
+  
+  "component_cards_needed": ["ES_CARD.json"],
+  "cards_status": {
+    "ES_CARD.json": "need_generate"
+  },
+  
+  "suggested_next_steps": [
+    {"skill": "component-card-generator", "reason": "生成Elasticsearch知识卡片", "completed": false},
+    {"skill": "scenario-planner", "reason": "生成测试用例", "completed": false},
+    {"skill": "data-generator", "reason": "生成测试日志数据", "completed": false},
+    {"skill": "test-script-generator", "reason": "生成自动化测试脚本", "completed": false},
+    {"skill": "env-config-generator", "reason": "生成Elasticsearch环境配置", "completed": false}
+  ]
+}

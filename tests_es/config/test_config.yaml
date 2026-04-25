@@ -1,0 +1,31 @@
+# Elasticsearch测试配置
+
+environment: test
+
+# Elasticsearch配置
+elasticsearch:
+  host: "localhost"
+  port: 9200
+  test_index: "test_logs"
+  cluster_name: "test_cluster"
+
+# 数据配置
+data:
+  logs_small: "/home/z00878808/gitstore/spark/test_data/es_logs/logs_small.json"
+  logs_medium: "/home/z00878808/gitstore/spark/test_data/es_logs/logs_medium.json"
+  logs_error: "/home/z00878808/gitstore/spark/test_data/es_logs/logs_error_only.json"
+  logs_empty: "/home/z00878808/gitstore/spark/test_data/es_logs/logs_empty.json"
+  expected_agg: "/home/z00878808/gitstore/spark/test_data/es_logs/expected_agg_result.json"
+
+# 测试配置
+test:
+  timeout: 300
+  retry: 3
+  parallel: false
+  
+# 性能阈值(ms)
+performance_thresholds:
+  small_index: 1000
+  medium_index: 5000
+  search: 100
+  aggregation: 200

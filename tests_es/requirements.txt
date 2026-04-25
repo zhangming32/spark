@@ -1,0 +1,7 @@
+pytest>=7.0.0
+pytest-benchmark>=4.0.0
+pytest-allure>=2.0.0
+pytest-xdist>=3.0.0
+requests>=2.25.0
+pyyaml>=6.0
+elasticsearch>=8.0.0

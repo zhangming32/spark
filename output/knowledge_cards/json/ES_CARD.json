@@ -1,0 +1,369 @@
+{
+  "component_name": "Elasticsearch",
+  "component_type": "search_engine",
+  "version": "8.x",
+  
+  "component_roles": {
+    "supported_roles": ["source", "processor", "sink"],
+    "role_details": {
+      "source": {
+        "operations": ["read", "search", "query", "scroll"],
+        "api": [
+          "GET /{index}/_search",
+          "GET /{index}/_doc/{id}",
+          "GET /{index}/_source/{id}",
+          "POST /_mget",
+          "POST /_search/scroll"
+        ],
+        "data_format": ["JSON", "Document"],
+        "description": "作为数据源，提供搜索查询能力，向下游返回查询结果"
+      },
+      "processor": {
+        "operations": ["search", "aggregate", "analyze", "filter", "transform"],
+        "api": [
+          "GET /_search",
+          "GET /{index}/_search",
+          "POST /_search",
+          "GET /{index}/_agg",
+          "_search with aggregations",
+          "_analyze"
+        ],
+        "data_format": ["JSON", "QueryDSL"],
+        "description": "作为搜索引擎，执行全文检索、聚合分析、数据过滤等处理操作"
+      },
+      "sink": {
+        "operations": ["write", "index", "bulk", "update", "delete"],
+        "api": [
+          "PUT /{index}/_doc/{id}",
+          "POST /{index}/_doc",
+          "POST /_bulk",
+          "PUT /{index}/_update/{id}",
+          "DELETE /{index}/_doc/{id}"
+        ],
+        "data_format": ["JSON", "Document"],
+        "description": "作为数据存储目标，接收文档写入，提供持久化存储"
+      }
+    },
+    "cannot_act_as": [],
+    "reason": "Elasticsearch是搜索引擎，兼具存储和计算能力，可作为数据源、处理器和数据目标"
+  },
+  
+  "component_interaction_rules": {
+    "as_source": {
+      "compatible_downstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Elasticsearch -> Spark",
+          "api_mapping": {
+            "Elasticsearch": "es.read.format('org.elasticsearch.spark.sql')",
+            "Spark": "DataFrame"
+          }
+        },
+        {
+          "component_type": "compute",
+          "examples": ["Logstash"],
+          "data_flow": "Elasticsearch -> Logstash",
+          "api_mapping": {
+            "Elasticsearch": "elasticsearch input plugin",
+            "Logstash": "Pipeline"
+          }
+        }
+      ],
+      "incompatible_downstream": [
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3"],
+          "reason": "需要compute组件中转处理数据"
+        }
+      ]
+    },
+    "as_processor": {
+      "compatible_upstream": [
+        {
+          "component_type": "streaming",
+          "examples": ["Kafka", "Logstash"],
+          "data_flow": "Kafka -> Elasticsearch",
+          "api_mapping": {
+            "Kafka": "consume messages",
+            "Elasticsearch": "index documents"
+          }
+        },
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Spark -> Elasticsearch",
+          "api_mapping": {
+            "Spark": "df.write.format('es')",
+            "Elasticsearch": "index docs"
+          }
+        }
+      ],
+      "compatible_downstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Elasticsearch -> Spark",
+          "api_mapping": {
+            "Elasticsearch": "search results",
+            "Spark": "DataFrame"
+          }
+        }
+      ]
+    },
+    "as_sink": {
+      "compatible_upstream": [
+        {
+          "component_type": "streaming",
+          "examples": ["Kafka", "Logstash"],
+          "data_flow": "Kafka -> Elasticsearch",
+          "api_mapping": {
+            "Kafka": "messages",
+            "Elasticsearch": "bulk index"
+          }
+        },
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Spark -> Elasticsearch",
+          "api_mapping": {
+            "Spark": "df.write.format('es').save()",
+            "Elasticsearch": "index docs"
+          }
+        },
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "LocalFS"],
+          "data_flow": "HDFS -> Logstash -> Elasticsearch",
+          "api_mapping": {
+            "HDFS": "log files",
+            "Logstash": "file input plugin",
+            "Elasticsearch": "output plugin"
+          }
+        }
+      ]
+    }
+  },
+  
+  "valid_data_flows": [
+    "Kafka -> Elasticsearch",
+    "Logstash -> Elasticsearch",
+    "Spark -> Elasticsearch",
+    "Elasticsearch -> Spark",
+    "HDFS -> Logstash -> Elasticsearch",
+    "Elasticsearch(search) -> Application",
+    "Application -> Elasticsearch(index)"
+  ],
+  
+  "invalid_data_flows": [
+    "Elasticsearch -> HDFS (需要compute中转)",
+    "Elasticsearch -> Kafka (需要compute中转)"
+  ],
+  
+  "core_concepts": {
+    "key_abstractions": [
+      {"name": "Index", "type": "DataUnit", "description": "文档的逻辑集合，类似数据库表"},
+      {"name": "Document", "type": "DataUnit", "description": "JSON格式的数据记录"},
+      {"name": "Mapping", "type": "Config", "description": "索引的schema定义"},
+      {"name": "QueryDSL", "type": "API", "description": "Elasticsearch查询语法"},
+      {"name": "Aggregation", "type": "API", "description": "聚合分析功能"},
+      {"name": "Cluster", "type": "Architecture", "description": "ES集群架构"},
+      {"name": "Node", "type": "Architecture", "description": "集群节点"},
+      {"name": "Shard", "type": "Architecture", "description": "索引分片"}
+    ],
+    "key_operations": [
+      "index_document",
+      "search_query",
+      "aggregate_analysis",
+      "update_document",
+      "delete_document",
+      "create_index",
+      "bulk_operations"
+    ]
+  },
+  
+  "test_scenarios": {
+    "functional": [
+      "索引创建与删除",
+      "文档CRUD操作",
+      "全文搜索(match/term/range)",
+      "布尔组合查询",
+      "聚合统计(terms/stats)",
+      "Mapping定义与验证",
+      "分词器分析"
+    ],
+    "integration": [
+      "Kafka-ES集成测试",
+      "Logstash-ES数据流测试",
+      "Spark-ES读写测试",
+      "ES集群数据同步测试"
+    ],
+    "fault_tolerance": [
+      "节点故障恢复",
+      "索引不存在错误处理",
+      "文档不存在查询处理",
+      "大结果集滚动查询",
+      "并发写入冲突处理",
+      "查询超时处理"
+    ],
+    "performance": [
+      "索引写入性能",
+      "搜索查询性能",
+      "聚合分析性能",
+      "批量操作性能",
+      "分片策略优化"
+    ]
+  },
+  
+  "api_reference": {
+    "create_index": {
+      "api": "PUT /{index}",
+      "params": ["index_name", "settings", "mappings"],
+      "returns": "acknowledged",
+      "example": "PUT /logs {\"settings\": {\"number_of_shards\": 3}, \"mappings\": {...}}"
+    },
+    "index_document": {
+      "api": "PUT /{index}/_doc/{id} or POST /{index}/_doc",
+      "params": ["index", "id", "document"],
+      "returns": "created/updated status",
+      "example": "PUT /logs/_doc/1 {\"timestamp\": \"2024-01-01\", \"level\": \"ERROR\"}"
+    },
+    "search": {
+      "api": "GET /{index}/_search",
+      "params": ["query", "size", "from", "sort", "aggs"],
+      "returns": "hits with documents",
+      "example": "GET /logs/_search {\"query\": {\"match\": {\"message\": \"error\"}}}"
+    },
+    "match_query": {
+      "api": "match query in QueryDSL",
+      "params": ["field", "value", "operator"],
+      "returns": "matching documents",
+      "example": "{\"query\": {\"match\": {\"message\": \"error warning\"}}}"
+    },
+    "term_query": {
+      "api": "term query in QueryDSL",
+      "params": ["field", "value"],
+      "returns": "exact matching documents",
+      "example": "{\"query\": {\"term\": {\"level\": \"ERROR\"}}}"
+    },
+    "range_query": {
+      "api": "range query in QueryDSL",
+      "params": ["field", "gte", "lte", "gt", "lt"],
+      "returns": "range matching documents",
+      "example": "{\"query\": {\"range\": {\"timestamp\": {\"gte\": \"2024-01-01\"}}}}"
+    },
+    "bool_query": {
+      "api": "bool query in QueryDSL",
+      "params": ["must", "should", "must_not", "filter"],
+      "returns": "combined query results",
+      "example": "{\"query\": {\"bool\": {\"must\": [{\"term\": {\"level\": \"ERROR\"}}]}}}"
+    },
+    "terms_aggregation": {
+      "api": "terms aggregation",
+      "params": ["field", "size", "order"],
+      "returns": "top terms with counts",
+      "example": "{\"aggs\": {\"error_levels\": {\"terms\": {\"field\": \"level.keyword\"}}}}"
+    },
+    "date_histogram_agg": {
+      "api": "date_histogram aggregation",
+      "params": ["field", "calendar_interval", "format"],
+      "returns": "time buckets",
+      "example": "{\"aggs\": {\"logs_over_time\": {\"date_histogram\": {\"field\": \"timestamp\", \"calendar_interval\": \"1h\"}}}}"
+    },
+    "bulk": {
+      "api": "POST /_bulk",
+      "params": ["operations batch"],
+      "returns": "bulk response with items",
+      "example": "POST /_bulk {\"index\": {\"_index\": \"logs\", \"_id\": \"1\"}}\n{\"timestamp\": \"...\"}"
+    },
+    "delete_by_query": {
+      "api": "POST /{index}/_delete_by_query",
+      "params": ["query"],
+      "returns": "deleted count",
+      "example": "POST /logs/_delete_by_query {\"query\": {\"range\": {\"timestamp\": {\"lt\": \"2024-01-01\"}}}}"
+    }
+  },
+  
+  "log_analysis_features": {
+    "typical_log_schema": [
+      {"name": "timestamp", "type": "date", "format": "ISO8601"},
+      {"name": "level", "type": "keyword", "values": ["ERROR", "WARN", "INFO", "DEBUG"]},
+      {"name": "message", "type": "text", "analyzer": "standard"},
+      {"name": "service", "type": "keyword"},
+      {"name": "host", "type": "keyword"},
+      {"name": "trace_id", "type": "keyword"},
+      {"name": "stack_trace", "type": "text"}
+    ],
+    "common_log_queries": [
+      "查询特定时间范围内的日志",
+      "查询ERROR级别日志",
+      "全文搜索日志内容",
+      "按服务名过滤日志",
+      "聚合统计日志级别分布",
+      "时间序列聚合分析"
+    ]
+  },
+  
+  "data_requirements": {
+    "small": {"docs": 100, "size": "100KB", "purpose": "功能测试"},
+    "medium": {"docs": 10000, "size": "10MB", "purpose": "集成测试"},
+    "large": {"docs": 1000000, "size": "1GB", "purpose": "性能测试"}
+  },
+  
+  "environment_requirements": {
+    "elasticsearch": {
+      "version": "8.x",
+      "nodes": 1,
+      "port": 9200,
+      "config": {
+        "cluster.name": "test_cluster",
+        "node.name": "node1",
+        "network.host": "0.0.0.0",
+        "discovery.type": "single-node"
+      }
+    },
+    "memory": {
+      "ES_JAVA_OPTS": "-Xms1g -Xmx1g"
+    }
+  },
+  
+  "common_issues": [
+    {
+      "issue": "索引不存在",
+      "symptom": "index_not_found_exception",
+      "cause": "查询或写入未创建的索引",
+      "solution": "先创建索引或使用自动索引创建"
+    },
+    {
+      "issue": "文档不存在",
+      "symptom": "404 Not Found",
+      "cause": "查询不存在的文档ID",
+      "solution": "检查文档ID是否正确，使用search而非get"
+    },
+    {
+      "issue": "字段类型冲突",
+      "symptom": "mapper_parsing_exception",
+      "cause": "同一字段不同文档使用不同类型",
+      "solution": "显式定义mapping，统一字段类型"
+    },
+    {
+      "issue": "查询超时",
+      "symptom": "search_phase_execution_exception",
+      "cause": "复杂查询或大数据量导致超时",
+      "solution": "设置timeout参数，优化查询，增加分片"
+    },
+    {
+      "issue": "聚合内存溢出",
+      "symptom": "too_many_buckets_exception",
+      "cause": "聚合返回桶数过多",
+      "solution": "限制聚合size，使用composite聚合"
+    }
+  ],
+  
+  "error_codes": [
+    {"code": "404", "message": "Index/document not found", "handling": "检查资源是否存在"},
+    {"code": "400", "message": "Bad request - invalid query", "handling": "验证QueryDSL语法"},
+    {"code": "500", "message": "Internal server error", "handling": "检查集群状态和日志"},
+    {"code": "409", "message": "Version conflict", "handling": "处理并发更新冲突"}
+  ]
+}

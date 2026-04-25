@@ -1,0 +1,96 @@
+{
+  "scripts_manifest_id": "SM_ES_001",
+  "generation_timestamp": "2026-04-25T10:50:00Z",
+  "status": "success",
+  
+  "input_sources": {
+    "test_cases": "./output/es_test_cases.json",
+    "data_manifest": "./output/es_data_manifest.json",
+    "component_card": "./output/knowledge_cards/json/ES_CARD.json"
+  },
+  
+  "generated_files": [
+    {
+      "file_id": "SF_ES_001",
+      "path": "./tests_es/conftest.py",
+      "type": "config",
+      "description": "pytest配置和fixtures(Elasticsearch连接)",
+      "test_count": 0
+    },
+    {
+      "file_id": "SF_ES_002",
+      "path": "./tests_es/test_es_functional.py",
+      "type": "test",
+      "description": "Elasticsearch功能测试",
+      "test_count": 12,
+      "test_classes": ["TestESIndexManagement", "TestESDocumentOperations", "TestESSearchQueries", "TestESAggregations"]
+    },
+    {
+      "file_id": "SF_ES_003",
+      "path": "./tests_es/test_es_fault_tolerance.py",
+      "type": "test",
+      "description": "Elasticsearch容错测试",
+      "test_count": 6,
+      "test_classes": ["TestESFaultTolerance"]
+    },
+    {
+      "file_id": "SF_ES_004",
+      "path": "./tests_es/test_es_performance.py",
+      "type": "test",
+      "description": "Elasticsearch性能测试",
+      "test_count": 4,
+      "test_classes": ["TestESPerformance"]
+    },
+    {
+      "file_id": "SF_ES_005",
+      "path": "./tests_es/config/test_config.yaml",
+      "type": "config",
+      "description": "测试环境配置"
+    },
+    {
+      "file_id": "SF_ES_006",
+      "path": "./tests_es/pytest.ini",
+      "type": "config",
+      "description": "pytest运行配置"
+    },
+    {
+      "file_id": "SF_ES_007",
+      "path": "./tests_es/requirements.txt",
+      "type": "config",
+      "description": "Python依赖包"
+    }
+  ],
+  
+  "test_summary": {
+    "total_tests": 22,
+    "functional_tests": 12,
+    "fault_tolerance_tests": 6,
+    "performance_tests": 4,
+    "p1_tests": 8,
+    "p2_tests": 10,
+    "p3_tests": 4
+  },
+  
+  "test_coverage": {
+    "index_management": ["TC_ES_FUNC_001", "TC_ES_FUNC_002"],
+    "document_operations": ["TC_ES_FUNC_003", "TC_ES_FUNC_004", "TC_ES_FUNC_008"],
+    "search_queries": ["TC_ES_FUNC_004", "TC_ES_FUNC_005", "TC_ES_FUNC_006", "TC_ES_FUNC_007"],
+    "aggregations": ["TC_ES_AGG_001", "TC_ES_AGG_002", "TC_ES_AGG_003"],
+    "fault_tolerance": ["TC_ES_FT_001", "TC_ES_FT_002", "TC_ES_FT_003", "TC_ES_FT_004", "TC_ES_FT_005", "TC_ES_FT_006"],
+    "performance": ["TC_ES_PERF_001", "TC_ES_PERF_002", "TC_ES_PERF_003", "TC_ES_PERF_004"]
+  },
+  
+  "run_commands": [
+    "pytest tests_es/ -v",
+    "pytest tests_es/ -v -m functional",
+    "pytest tests_es/ -v -m fault_tolerance",
+    "pytest tests_es/ -v -m performance",
+    "pytest tests_es/ -v -m P1"
+  ],
+  
+  "validation": {
+    "all_files_created": true,
+    "syntax_valid": true,
+    "imports_valid": true
+  }
+}
