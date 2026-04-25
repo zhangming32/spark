@@ -1,0 +1,128 @@
+{
+  "data_manifest_id": "DM_001_v2",
+  "generation_timestamp": "2026-04-24T19:20:00Z",
+  "status": "success",
+  "errors": [],
+  "version": "2.0",
+  
+  "input_source": "./output/test_cases.json",
+  "test_case_ids": ["TC_FUNC_001", "TC_INT_001", "TC_FT_001", "TC_PERF_001", "TC_BOUNDARY_001"],
+  
+  "strategy": "generated",
+  "strategy_reason": "定制测试数据，修正category为A-J字母，增加边界值和null值",
+  
+  "data_files": [
+    {
+      "file_id": "DF_001",
+      "path": "./test_data/input/data_small.csv",
+      "type": "input",
+      "format": "CSV",
+      "row_count": 100,
+      "columns": [
+        {"name": "id", "type": "integer", "nullable": false, "range": "1-100"},
+        {"name": "category", "type": "string", "nullable": false, "values": "A-J"},
+        {"name": "value", "type": "double", "nullable": false, "range": "0-1000"}
+      ],
+      "source": "generated",
+      "purpose": "功能测试、集成测试",
+      "validation": {
+        "row_count": 100,
+        "category_count": 10,
+        "no_null_values": true
+      }
+    },
+    {
+      "file_id": "DF_002",
+      "path": "./test_data/input/data_medium.csv",
+      "type": "input",
+      "format": "CSV",
+      "row_count": 100000,
+      "columns": [
+        {"name": "id", "type": "integer", "nullable": false, "range": "1-100000"},
+        {"name": "category", "type": "string", "nullable": false, "values": "0-9"},
+        {"name": "value", "type": "double", "nullable": false, "range": "0-1000"}
+      ],
+      "source": "generated",
+      "purpose": "集成测试、性能测试",
+      "note": "category仍为数字，需重新生成以匹配规范"
+    },
+    {
+      "file_id": "DF_003",
+      "path": "./test_data/input/data_boundary.csv",
+      "type": "input",
+      "format": "CSV",
+      "row_count": 7,
+      "columns": [
+        {"name": "id", "type": "integer", "nullable": true, "test_values": ["0", "999999", "-1", "1000000"]},
+        {"name": "category", "type": "string", "nullable": true, "test_values": ["A", "B", "J", "null", "empty"]},
+        {"name": "value", "type": "double", "nullable": true, "test_values": ["0.0", "999999.0", "-1.0", "-999999.0", "null"]}
+      ],
+      "source": "generated",
+      "purpose": "边界值测试、null值测试",
+      "test_scenarios": [
+        {"row": 1, "test": "id最小边界值0"},
+        {"row": 2, "test": "id最大边界值999999"},
+        {"row": 3, "test": "id负数边界值-1"},
+        {"row": 4, "test": "value负数边界值"},
+        {"row": 5, "test": "category为空"},
+        {"row": 6, "test": "value为空字符串"},
+        {"row": 7, "test": "value为null字符串"}
+      ]
+    },
+    {
+      "file_id": "DF_004",
+      "path": "./test_data/input/empty.csv",
+      "type": "input",
+      "format": "CSV",
+      "row_count": 0,
+      "columns": [
+        {"name": "id", "type": "integer"},
+        {"name": "category", "type": "string"},
+        {"name": "value", "type": "double"}
+      ],
+      "source": "generated",
+      "purpose": "容错测试-空文件"
+    },
+    {
+      "file_id": "DF_005",
+      "path": "./test_data/expected/expected_aggregation.csv",
+      "type": "expected_output",
+      "format": "CSV",
+      "row_count": 10,
+      "columns": [
+        {"name": "category", "type": "string", "values": "A-J"},
+        {"name": "count", "type": "long", "range": "8-20"},
+        {"name": "total", "type": "double", "range": "2000-10000"}
+      ],
+      "source": "generated",
+      "generation_logic": "groupBy category, count(*), sum(value)",
+      "purpose": "集成测试结果验证",
+      "validation_rules": [
+        {"rule": "每行count应在8-20范围内"},
+        {"rule": "每行total应在2000-10000范围内"},
+        {"rule": "所有category应为A-J"}
+      ]
+    }
+  ],
+  
+  "hdfs_paths": {
+    "input_small": "hdfs://localhost:9000/test/input/data_small.csv",
+    "input_medium": "hdfs://localhost:9000/test/input/data_medium.csv",
+    "input_boundary": "hdfs://localhost:9000/test/input/data_boundary.csv",
+    "input_empty": "hdfs://localhost:9000/test/input/empty.csv",
+    "output_path": "hdfs://localhost:9000/test/output/result/"
+  },
+  
+  "validation": {
+    "all_files_exist": true,
+    "row_counts_verified": true,
+    "schemas_valid": true,
+    "data_quality_issues": [
+      {
+        "file": "data_medium.csv",
+        "issue": "category为数字而非字母",
+        "status": "pending_fix"
+      }
+    ]
+  }
+}

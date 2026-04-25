@@ -1,0 +1,187 @@
+{
+  "component_name": "HDFS",
+  "component_type": "storage",
+  "version": "3.x",
+  
+  "component_roles": {
+    "supported_roles": ["source", "sink"],
+    "role_details": {
+      "source": {
+        "operations": ["read", "list", "open", "getBlockLocations"],
+        "api": [
+          "FileSystem.open(Path)",
+          "FileSystem.listStatus(Path)",
+          "FSDataInputStream.read()"
+        ],
+        "data_format": ["CSV", "JSON", "Parquet", "Avro", "Text", "SequenceFile"],
+        "description": "HDFS作为分布式文件系统，可作为数据源提供文件读取能力"
+      },
+      "sink": {
+        "operations": ["write", "create", "mkdir", "delete"],
+        "api": [
+          "FileSystem.create(Path)",
+          "FileSystem.mkdirs(Path)",
+          "FSDataOutputStream.write()",
+          "FileSystem.delete(Path)"
+        ],
+        "data_format": ["CSV", "JSON", "Parquet", "Avro", "Text", "SequenceFile"],
+        "description": "HDFS可作为数据目标，接收写入的文件数据"
+      }
+    },
+    "cannot_act_as": ["processor"],
+    "reason": "HDFS是存储组件，无数据处理能力，只能存储和读取数据"
+  },
+  
+  "component_interaction_rules": {
+    "as_source": {
+      "compatible_downstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink", "MapReduce"],
+          "data_flow": "HDFS -> Spark",
+          "interaction_type": "read_data",
+          "api_mapping": {
+            "HDFS": "hdfs://namenode:9000/path",
+            "Spark": "spark.read.csv('hdfs://namenode:9000/path')"
+          }
+        }
+      ],
+      "incompatible_downstream": [
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3", "HBase"],
+          "reason": "存储组件之间不能直接交互，需要processor中转"
+        }
+      ]
+    },
+    "as_sink": {
+      "compatible_upstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink", "MapReduce"],
+          "data_flow": "Spark -> HDFS",
+          "interaction_type": "write_data",
+          "api_mapping": {
+            "Spark": "df.write.csv('hdfs://namenode:9000/output')",
+            "HDFS": "结果文件写入HDFS目录"
+          }
+        }
+      ],
+      "incompatible_upstream": [
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3", "HBase"],
+          "reason": "存储组件之间不能直接交互，需要processor中转"
+        }
+      ]
+    }
+  },
+  
+  "valid_data_flows": [
+    "HDFS -> Spark -> HDFS",
+    "HDFS -> Spark -> Kafka",
+    "HDFS -> Flink -> HDFS",
+    "HDFS -> Spark -> MySQL"
+  ],
+  
+  "invalid_data_flows": [
+    "HDFS -> HDFS (同类型不能直接交互)",
+    "HDFS -> Kafka (缺少processor)"
+  ],
+  
+  "test_scenarios": {
+    "functional": ["文件读取", "文件写入", "目录列表", "文件删除", "目录创建"],
+    "integration": ["HDFS-Spark读取", "HDFS-Spark写入", "完整数据流"],
+    "fault_tolerance": ["文件不存在", "空文件处理", "权限错误", "写入冲突"],
+    "performance": ["大数据量读取", "大数据量写入", "并发读写"]
+  },
+  
+  "api_reference": {
+    "read_csv_via_spark": {
+      "api": "spark.read.csv(hdfs_path)",
+      "params": ["path", "header", "inferSchema"],
+      "returns": "DataFrame",
+      "example": "df = spark.read.option('header', 'true').csv('hdfs://localhost:9000/test/input/data.csv')"
+    },
+    "write_csv_via_spark": {
+      "api": "df.write.csv(hdfs_path)",
+      "params": ["path", "mode", "header"],
+      "returns": "None",
+      "example": "df.write.mode('overwrite').option('header', 'true').csv('hdfs://localhost:9000/test/output')"
+    },
+    "list_directory": {
+      "api": "hdfs_client.list(path)",
+      "params": ["path"],
+      "returns": "list of file statuses",
+      "example": "files = hdfs_client.list('/test/input')"
+    }
+  },
+  
+  "data_requirements": {
+    "small": {"rows": 100, "size": "10KB", "purpose": "功能测试"},
+    "medium": {"rows": 100000, "size": "10MB", "purpose": "集成测试"},
+    "large": {"rows": 1000000, "size": "100MB", "purpose": "性能测试"}
+  },
+  
+  "environment_requirements": {
+    "namenode_url": "hdfs://localhost:9000",
+    "webhdfs_url": "http://localhost:9870",
+    "user": "root",
+    "replication": 1,
+    "block_size": "128MB"
+  },
+  
+  "common_issues": [
+    {
+      "issue": "连接NameNode失败",
+      "symptom": "java.net.ConnectException: Connection refused",
+      "cause": "NameNode未启动或端口配置错误",
+      "solution": "检查NameNode状态: hdfs namenode; 检查配置: core-site.xml中fs.defaultFS"
+    },
+    {
+      "issue": "权限不足",
+      "symptom": "org.apache.hadoop.security.AccessControlException: Permission denied",
+      "cause": "HDFS目录权限限制",
+      "solution": "修改目录权限: hdfs dfs -chmod 777 /path; 或使用正确的用户身份"
+    },
+    {
+      "issue": "文件不存在",
+      "symptom": "org.apache.hadoop.fs.PathNotFoundException",
+      "cause": "路径错误或文件未创建",
+      "solution": "检查路径: hdfs dfs -ls /path; 确认文件存在"
+    },
+    {
+      "issue": "磁盘空间不足",
+      "symptom": "org.apache.hadoop.hdfs.protocol.DSQuotaExceededException",
+      "cause": "HDFS存储配额限制",
+      "solution": "清理旧数据: hdfs dfs -rm -r /old_data; 或申请扩容"
+    }
+  ],
+  
+  "error_codes": [
+    {
+      "code": "E001",
+      "message": "NameNode connection failed",
+      "http_status": 503,
+      "handling": "检查NameNode服务状态和配置"
+    },
+    {
+      "code": "E002",
+      "message": "Permission denied",
+      "http_status": 403,
+      "handling": "检查用户权限和目录ACL"
+    },
+    {
+      "code": "E003",
+      "message": "File not found",
+      "http_status": 404,
+      "handling": "验证文件路径是否正确"
+    },
+    {
+      "code": "E004",
+      "message": "Disk quota exceeded",
+      "http_status": 507,
+      "handling": "清理数据或申请扩容"
+    }
+  ]
+}

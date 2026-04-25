@@ -1,0 +1,75 @@
+{
+  "prompt_id": "P_001",
+  "timestamp": "2026-04-24T19:05:00Z",
+  "original_input": "测试HDFS数据经过spark计算后存入HDFS",
+  "status": "success",
+  "errors": [],
+  
+  "parsed_elements": {
+    "scenario_type": "integration",
+    "scenario_description": "从HDFS读取数据，经Spark计算处理，结果写入HDFS",
+    
+    "components": [
+      {"name": "HDFS", "role": "source", "operation": "read", "confidence": 1.0, "position": 0},
+      {"name": "Spark", "role": "processor", "operation": "compute", "confidence": 1.0, "position": 1},
+      {"name": "HDFS", "role": "sink", "operation": "write", "confidence": 1.0, "position": 2}
+    ],
+    
+    "data_flow": {
+      "flow_type": "linear",
+      "sequence": ["HDFS.read", "Spark.compute", "HDFS.write"],
+      "description": "HDFS -> Spark -> HDFS",
+      "role_sequence": "source -> processor -> sink",
+      "valid": true,
+      "validation_reason": "完整数据流，包含processor"
+    },
+    
+    "data_requirements": {
+      "input": {
+        "source": "HDFS",
+        "type": "text_file",
+        "format": "CSV",
+        "size": "medium",
+        "estimated_rows": 100000
+      },
+      "processing": {
+        "type": "compute",
+        "operations": ["transform", "aggregate"],
+        "logic_description": "Spark计算处理（具体逻辑待测试用例细化）"
+      },
+      "output": {
+        "target": "HDFS",
+        "type": "text_file",
+        "format": "CSV",
+        "expected_rows": "取决于计算逻辑"
+      }
+    },
+    
+    "validation_points": [
+      {"point_id": "VP_001", "point": "data_integrity", "description": "数据完整性验证", "priority": "P1"},
+      {"point_id": "VP_002", "point": "compute_correctness", "description": "计算结果正确性", "priority": "P1"},
+      {"point_id": "VP_003", "point": "write_success", "description": "写入成功验证", "priority": "P1"}
+    ],
+    
+    "test_coverage_requirements": {
+      "single_component": true,
+      "component_combination": true,
+      "fault_tolerance": true,
+      "performance": true,
+      "estimated_test_count": 18
+    }
+  },
+  
+  "component_cards_needed": ["HDFS_CARD.json", "SPARK_CARD.json"],
+  "cards_status": {
+    "HDFS_CARD.json": "generated",
+    "SPARK_CARD.json": "generated"
+  },
+  
+  "suggested_next_steps": [
+    {"skill": "scenario-planner", "reason": "生成测试用例", "completed": true},
+    {"skill": "data-generator", "reason": "生成测试数据", "completed": true},
+    {"skill": "test-script-generator", "reason": "生成测试脚本", "completed": true},
+    {"skill": "env-config-generator", "reason": "生成环境配置", "completed": true}
+  ]
+}

@@ -1,0 +1,401 @@
+{
+  "test_suite": {
+    "suite_id": "TS_001_v2",
+    "suite_name": "HDFS-Spark-HDFS集成测试",
+    "timestamp": "2026-04-24T19:20:00Z",
+    "status": "success",
+    "version": "2.0",
+    
+    "components": ["HDFS", "Spark"],
+    "role_sequence_validation": {
+      "sequence": "source -> processor -> sink",
+      "valid": true,
+      "reason": "完整数据流，HDFS(source)->Spark(processor)->HDFS(sink)"
+    },
+    
+    "test_case_summary": {
+      "functional_count": 6,
+      "integration_count": 4,
+      "fault_tolerance_count": 6,
+      "performance_count": 4,
+      "boundary_count": 4,
+      "total_count": 24
+    },
+    
+    "test_cases": {
+      "functional": [
+        {
+          "case_id": "TC_FUNC_001",
+          "case_name": "HDFS读取CSV文件",
+          "component": "HDFS",
+          "role": "source",
+          "priority": "P1",
+          "description": "验证从HDFS正确读取CSV格式文件",
+          "api": "spark.read.csv(hdfs_path)",
+          "input_data": {"file": "data_small.csv", "rows": 100},
+          "expected_result": {
+            "status": "success",
+            "row_count": 100,
+            "column_count": 3,
+            "columns": ["id", "category", "value"],
+            "schema": {"id": "integer", "category": "string", "value": "double"}
+          }
+        },
+        {
+          "case_id": "TC_FUNC_002",
+          "case_name": "HDFS写入CSV文件",
+          "component": "HDFS",
+          "role": "sink",
+          "priority": "P1",
+          "description": "验证结果正确写入HDFS",
+          "api": "df.write.csv(hdfs_path)",
+          "expected_result": {
+            "status": "success",
+            "file_exists": true,
+            "write_mode": "overwrite"
+          }
+        },
+        {
+          "case_id": "TC_FUNC_003",
+          "case_name": "Spark聚合计算",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P1",
+          "description": "验证Spark聚合计算功能正确性",
+          "api": "df.groupBy('category').agg(count('*'), sum('value'))",
+          "input_data": {"file": "data_small.csv"},
+          "expected_result": {
+            "status": "success",
+            "row_count": 10,
+            "columns": ["category", "count", "total"]
+          }
+        },
+        {
+          "case_id": "TC_FUNC_004",
+          "case_name": "Spark过滤操作",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "验证Spark过滤操作正确性",
+          "api": "df.filter(col('value') > threshold)",
+          "input_data": {"file": "data_small.csv"},
+          "expected_result": {
+            "status": "success",
+            "validation": "所有value > threshold"
+          }
+        },
+        {
+          "case_id": "TC_FUNC_005",
+          "case_name": "Spark排序操作",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "验证Spark排序操作正确性",
+          "api": "df.orderBy('category')",
+          "expected_result": {
+            "status": "success",
+            "validation": "结果按category升序排列"
+          }
+        },
+        {
+          "case_id": "TC_FUNC_006",
+          "case_name": "Schema验证",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P1",
+          "description": "验证读取数据的Schema正确性",
+          "expected_result": {
+            "status": "success",
+            "schema": {
+              "id": {"type": "IntegerType", "nullable": false},
+              "category": {"type": "StringType", "nullable": false},
+              "value": {"type": "DoubleType", "nullable": false}
+            }
+          }
+        }
+      ],
+      
+      "integration": [
+        {
+          "case_id": "TC_INT_001",
+          "case_name": "HDFS_Spark_HDFS完整流程",
+          "data_flow": "HDFS -> Spark -> HDFS",
+          "role_sequence": "source -> processor -> sink",
+          "priority": "P1",
+          "description": "测试从HDFS读取数据，Spark聚合计算，写入HDFS完整流程",
+          "steps": [
+            {"step": 1, "action": "read_from_hdfs", "component": "HDFS", "api": "spark.read.csv()", "expected": {"row_count": 100}},
+            {"step": 2, "action": "spark_aggregation", "component": "Spark", "api": "groupBy().agg()", "expected": {"row_count": 10}},
+            {"step": 3, "action": "write_to_hdfs", "component": "HDFS", "api": "df.write.csv()", "expected": {"file_exists": true}},
+            {"step": 4, "action": "verify_result", "component": "Spark", "api": "count(), collect()", "expected": {"matches_expected": true}}
+          ],
+          "expected_result": {
+            "status": "success",
+            "input_rows": 100,
+            "output_rows": 10,
+            "validation": ["数据读取成功", "计算结果正确", "写入成功", "数据完整"]
+          }
+        },
+        {
+          "case_id": "TC_INT_002",
+          "case_name": "Local_Spark_HDFS流程",
+          "data_flow": "Local -> Spark -> HDFS",
+          "role_sequence": "source -> processor -> sink",
+          "priority": "P2",
+          "description": "本地文件作为数据源，Spark处理后写入HDFS",
+          "steps": [
+            {"step": 1, "action": "read_from_local", "component": "LocalFS", "api": "spark.read.csv(local_path)"},
+            {"step": 2, "action": "spark_process", "component": "Spark", "api": "groupBy().agg()"},
+            {"step": 3, "action": "write_to_hdfs", "component": "HDFS", "api": "df.write.csv(hdfs_path)"}
+          ]
+        },
+        {
+          "case_id": "TC_INT_003",
+          "case_name": "HDFS_Spark_Local流程",
+          "data_flow": "HDFS -> Spark -> Local",
+          "role_sequence": "source -> processor -> sink",
+          "priority": "P2",
+          "description": "HDFS数据经Spark处理后写入本地",
+          "steps": [
+            {"step": 1, "action": "read_from_hdfs", "component": "HDFS", "api": "spark.read.csv(hdfs_path)"},
+            {"step": 2, "action": "spark_process", "component": "Spark", "api": "groupBy().agg()"},
+            {"step": 3, "action": "write_to_local", "component": "LocalFS", "api": "df.write.csv(local_path)"}
+          ]
+        },
+        {
+          "case_id": "TC_INT_004",
+          "case_name": "数据完整性端到端验证",
+          "data_flow": "HDFS -> Spark -> HDFS",
+          "priority": "P1",
+          "description": "验证输入数据与输出数据的一致性",
+          "expected_result": {
+            "validation": [
+              "输入100行 -> 输出10行 (聚合后)",
+              "输出category数量匹配输入distinct category",
+              "输出count总和 = 输入行数",
+              "输出total总和 ≈ 输入value总和"
+            ]
+          }
+        }
+      ],
+      
+      "fault_tolerance": [
+        {
+          "case_id": "TC_FT_001",
+          "case_name": "HDFS读取不存在文件",
+          "component": "HDFS",
+          "role": "source",
+          "priority": "P2",
+          "description": "测试读取不存在路径时的错误处理",
+          "input_data": {"path": "/nonexistent/path.csv"},
+          "expected_result": {
+            "status": "error",
+            "error_type": "AnalysisException",
+            "error_message": "Path does not exist",
+            "handling": "正确抛出异常"
+          }
+        },
+        {
+          "case_id": "TC_FT_002",
+          "case_name": "HDFS读取空文件",
+          "component": "HDFS",
+          "role": "source",
+          "priority": "P2",
+          "description": "测试读取空文件时的处理",
+          "input_data": {"file": "empty.csv", "rows": 0},
+          "expected_result": {
+            "status": "success",
+            "row_count": 0,
+            "schema_valid": true
+          }
+        },
+        {
+          "case_id": "TC_FT_003",
+          "case_name": "HDFS写入目录已存在",
+          "component": "HDFS",
+          "role": "sink",
+          "priority": "P2",
+          "description": "测试写入已存在目录时的覆盖处理",
+          "expected_result": {
+            "status": "success",
+            "mode": "overwrite",
+            "old_files_removed": true
+          }
+        },
+        {
+          "case_id": "TC_FT_004",
+          "case_name": "Spark处理空DataFrame",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试Spark处理空数据时的行为",
+          "input_data": {"rows": 0},
+          "expected_result": {
+            "status": "success",
+            "output_rows": 0
+          }
+        },
+        {
+          "case_id": "TC_FT_005",
+          "case_name": "Spark计算异常处理",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P3",
+          "description": "测试Spark计算过程中的异常处理",
+          "expected_result": {
+            "status": "error",
+            "error_handling": "正确抛出异常"
+          }
+        },
+        {
+          "case_id": "TC_FT_006",
+          "case_name": "读取包含null值的数据",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试读取包含null值的CSV文件",
+          "input_data": {"file": "data_boundary.csv"},
+          "expected_result": {
+            "status": "success",
+            "null_handling": "正确识别null值",
+            "schema": {"nullable": true}
+          }
+        }
+      ],
+      
+      "boundary": [
+        {
+          "case_id": "TC_BOUND_001",
+          "case_name": "id边界值0",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试id为最小边界值0的处理",
+          "input_data": {"file": "data_boundary.csv", "row": 1},
+          "expected_result": {
+            "status": "success",
+            "id_value": 0,
+            "validation": "正确处理边界值"
+          }
+        },
+        {
+          "case_id": "TC_BOUND_002",
+          "case_name": "id边界值999999",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试id为最大边界值999999的处理",
+          "input_data": {"file": "data_boundary.csv", "row": 2},
+          "expected_result": {
+            "status": "success",
+            "id_value": 999999,
+            "validation": "正确处理大数值"
+          }
+        },
+        {
+          "case_id": "TC_BOUND_003",
+          "case_name": "value负数边界值",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试value为负数的处理",
+          "input_data": {"file": "data_boundary.csv", "row": 3},
+          "expected_result": {
+            "status": "success",
+            "value_negative": true,
+            "validation": "正确处理负数"
+          }
+        },
+        {
+          "case_id": "TC_BOUND_004",
+          "case_name": "category为空字符串",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P2",
+          "description": "测试category字段为空字符串的处理",
+          "input_data": {"file": "data_boundary.csv", "row": 5},
+          "expected_result": {
+            "status": "success",
+            "category_null": true,
+            "validation": "正确处理空字符串"
+          }
+        }
+      ],
+      
+      "performance": [
+        {
+          "case_id": "TC_PERF_001",
+          "case_name": "HDFS小数据量读取性能",
+          "component": "HDFS",
+          "role": "source",
+          "priority": "P3",
+          "data_size": "small",
+          "rows": 100,
+          "expected_result": {
+            "threshold_seconds": 1,
+            "baseline": {"read_time_ms": 500}
+          }
+        },
+        {
+          "case_id": "TC_PERF_002",
+          "case_name": "HDFS中等数据量读取性能",
+          "component": "HDFS",
+          "role": "source",
+          "priority": "P3",
+          "data_size": "medium",
+          "rows": 100000,
+          "expected_result": {
+            "threshold_seconds": 10,
+            "baseline": {"read_time_ms": 5000}
+          }
+        },
+        {
+          "case_id": "TC_PERF_003",
+          "case_name": "Spark聚合性能",
+          "component": "Spark",
+          "role": "processor",
+          "priority": "P3",
+          "data_size": "medium",
+          "rows": 100000,
+          "expected_result": {
+            "threshold_seconds": 5,
+            "baseline": {"agg_time_ms": 3000}
+          }
+        },
+        {
+          "case_id": "TC_PERF_004",
+          "case_name": "HDFS大数据量写入性能",
+          "component": "HDFS",
+          "role": "sink",
+          "priority": "P3",
+          "data_size": "large",
+          "rows": 1000000,
+          "expected_result": {
+            "threshold_seconds": 30,
+            "baseline": {"write_time_ms": 20000}
+          }
+        }
+      ]
+    },
+    
+    "data_requirements": {
+      "input_data": {
+        "type": "CSV",
+        "format": "CSV with header",
+        "schema": [
+          {"name": "id", "type": "integer", "nullable": false, "range": "1-100"},
+          {"name": "category", "type": "string", "nullable": false, "values": "A-J"},
+          {"name": "value", "type": "double", "nullable": false, "range": "0.0-1000.0"}
+        ]
+      },
+      "expected_output": {
+        "type": "CSV",
+        "schema": [
+          {"name": "category", "type": "string", "nullable": false},
+          {"name": "count", "type": "long", "nullable": false},
+          {"name": "total", "type": "double", "nullable": false}
+        ]
+      }
+    }
+  }
+}

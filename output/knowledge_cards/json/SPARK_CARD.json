@@ -1,0 +1,230 @@
+{
+  "component_name": "Spark",
+  "component_type": "compute",
+  "version": "4.x",
+  
+  "component_roles": {
+    "supported_roles": ["processor"],
+    "role_details": {
+      "processor": {
+        "operations": ["compute", "transform", "aggregate", "filter", "join", "sort", "groupBy"],
+        "api": [
+          "SparkSession.builder",
+          "DataFrame.read",
+          "DataFrame.write",
+          "DataFrame.groupBy",
+          "DataFrame.filter",
+          "DataFrame.join",
+          "DataFrame.select",
+          "DataFrame.agg",
+          "RDD.map",
+          "RDD.reduceByKey",
+          "RDD.filter"
+        ],
+        "data_format": ["CSV", "JSON", "Parquet", "Avro", "ORC", "Text"],
+        "description": "Spark作为分布式计算引擎，执行数据转换、聚合、连接等计算操作"
+      }
+    },
+    "cannot_act_as": ["source", "sink"],
+    "reason": "Spark是计算引擎，需要外部数据源提供数据，需要外部存储接收结果"
+  },
+  
+  "component_interaction_rules": {
+    "as_processor": {
+      "compatible_upstream": [
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3", "LocalFS"],
+          "data_flow": "HDFS -> Spark",
+          "api_mapping": {
+            "HDFS": "spark.read.csv('hdfs://...')",
+            "Spark": "DataFrame"
+          }
+        },
+        {
+          "component_type": "streaming",
+          "examples": ["Kafka", "Pulsar"],
+          "data_flow": "Kafka -> Spark",
+          "api_mapping": {
+            "Kafka": "spark.readStream.format('kafka')",
+            "Spark": "Streaming DataFrame"
+          }
+        },
+        {
+          "component_type": "database",
+          "examples": ["MySQL", "PostgreSQL", "HBase"],
+          "data_flow": "Database -> Spark",
+          "api_mapping": {
+            "Database": "spark.read.jdbc(url, table)",
+            "Spark": "DataFrame"
+          }
+        }
+      ],
+      "compatible_downstream": [
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3", "LocalFS"],
+          "data_flow": "Spark -> HDFS",
+          "api_mapping": {
+            "Spark": "df.write.csv('hdfs://...')",
+            "HDFS": "结果文件"
+          }
+        },
+        {
+          "component_type": "streaming",
+          "examples": ["Kafka", "Pulsar"],
+          "data_flow": "Spark -> Kafka",
+          "api_mapping": {
+            "Spark": "df.writeStream.format('kafka')",
+            "Kafka": "消息写入Topic"
+          }
+        },
+        {
+          "component_type": "database",
+          "examples": ["MySQL", "PostgreSQL", "HBase"],
+          "data_flow": "Spark -> Database",
+          "api_mapping": {
+            "Spark": "df.write.jdbc(url, table)",
+            "Database": "数据写入表"
+          }
+        }
+      ]
+    }
+  },
+  
+  "valid_data_flows": [
+    "HDFS -> Spark -> HDFS",
+    "HDFS -> Spark -> Kafka",
+    "Kafka -> Spark -> HDFS",
+    "MySQL -> Spark -> HDFS",
+    "HDFS -> Spark -> MySQL"
+  ],
+  
+  "invalid_data_flows": [
+    "Spark -> Spark (缺少数据源)",
+    "Spark单独存在 (需要上下游)"
+  ],
+  
+  "test_scenarios": {
+    "functional": ["DataFrame创建", "CSV读取", "聚合计算", "过滤操作", "连接操作", "排序操作"],
+    "integration": ["HDFS读取验证", "Spark处理验证", "HDFS写入验证", "完整数据流验证"],
+    "fault_tolerance": ["空数据处理", "文件不存在", "写入目录已存在", "内存溢出", "任务失败重试"],
+    "performance": ["大数据量读取性能", "聚合计算性能", "大数据量写入性能", "分区优化"]
+  },
+  
+  "api_reference": {
+    "read_csv": {
+      "api": "spark.read.csv(path)",
+      "params": ["path", "header", "inferSchema", "delimiter"],
+      "returns": "DataFrame",
+      "example": "df = spark.read.option('header', 'true').option('inferSchema', 'true').csv('/data/input.csv')"
+    },
+    "read_hdfs": {
+      "api": "spark.read.csv('hdfs://namenode:9000/path')",
+      "params": ["hdfs_path", "header", "inferSchema"],
+      "returns": "DataFrame",
+      "example": "df = spark.read.csv('hdfs://localhost:9000/test/input/data.csv')"
+    },
+    "groupBy_agg": {
+      "api": "df.groupBy(col).agg(aggFunc)",
+      "params": ["grouping_column", "aggregation_function"],
+      "returns": "DataFrame",
+      "example": "result = df.groupBy('category').agg(count('*').alias('cnt'), sum('value').alias('total'))"
+    },
+    "filter": {
+      "api": "df.filter(condition)",
+      "params": ["filter_condition"],
+      "returns": "DataFrame",
+      "example": "filtered = df.filter(col('value') > 100)"
+    },
+    "write_csv": {
+      "api": "df.write.csv(path)",
+      "params": ["path", "mode", "header"],
+      "returns": "None",
+      "example": "df.write.mode('overwrite').option('header', 'true').csv('hdfs://localhost:9000/test/output')"
+    },
+    "write_hdfs": {
+      "api": "df.write.csv('hdfs://namenode:9000/output')",
+      "params": ["hdfs_path", "mode", "header"],
+      "returns": "None",
+      "example": "result.write.mode('overwrite').option('header', 'true').csv('hdfs://localhost:9000/test/output/result')"
+    }
+  },
+  
+  "data_requirements": {
+    "small": {"rows": 100, "size": "10KB", "purpose": "功能测试"},
+    "medium": {"rows": 100000, "size": "10MB", "purpose": "集成测试"},
+    "large": {"rows": 1000000, "size": "100MB", "purpose": "性能测试"}
+  },
+  
+  "environment_requirements": {
+    "spark": {
+      "version": "4.x",
+      "master": "local[*]",
+      "driver_memory": "2g",
+      "executor_memory": "2g",
+      "config": {
+        "spark.sql.warehouse.dir": "/tmp/spark-warehouse",
+        "spark.serializer": "org.apache.spark.serializer.KryoSerializer"
+      }
+    },
+    "hdfs": {
+      "namenode": "hdfs://localhost:9000",
+      "required": true
+    }
+  },
+  
+  "common_issues": [
+    {
+      "issue": "内存溢出(OOM)",
+      "symptom": "java.lang.OutOfMemoryError: Java heap space",
+      "cause": "Driver/Executor内存配置不足",
+      "solution": "增加内存配置: spark.driver.memory, spark.executor.memory; 或优化数据分区"
+    },
+    {
+      "issue": "任务超时",
+      "symptom": "org.apache.spark.SparkException: Timed out waiting for task",
+      "cause": "网络问题或资源竞争导致任务执行缓慢",
+      "solution": "增加超时时间: spark.network.timeout; 优化资源配置"
+    },
+    {
+      "issue": "分区数过小",
+      "symptom": "任务执行慢，资源利用率低",
+      "cause": "默认分区数不适合大数据量",
+      "solution": "调整分区数: spark.sql.shuffle.partitions; 或repartition操作"
+    },
+    {
+      "issue": "Schema推断错误",
+      "symptom": "数据类型不符合预期",
+      "cause": "inferSchema依赖采样可能导致错误",
+      "solution": "显式指定schema: .schema(StructType(...))"
+    }
+  ],
+  
+  "error_codes": [
+    {
+      "code": "E101",
+      "message": "Out of memory",
+      "exit_code": 1,
+      "handling": "增加内存配置或优化数据分区"
+    },
+    {
+      "code": "E102",
+      "message": "Task failed timeout",
+      "exit_code": 1,
+      "handling": "检查网络连接和资源竞争"
+    },
+    {
+      "code": "E103",
+      "message": "AnalysisException: column not found",
+      "exit_code": 1,
+      "handling": "验证DataFrame schema和列名"
+    },
+    {
+      "code": "E104",
+      "message": "Input path does not exist",
+      "exit_code": 1,
+      "handling": "验证输入路径是否正确"
+    }
+  ]
+}

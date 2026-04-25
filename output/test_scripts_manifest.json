@@ -1,0 +1,54 @@
+{
+  "scripts_manifest_id": "SM_001_v2",
+  "generation_timestamp": "2026-04-24T19:25:00Z",
+  "status": "success",
+  "version": "2.0",
+  
+  "input_sources": {
+    "test_cases": "./output/test_cases.json",
+    "data_manifest": "./output/data_manifest.json"
+  },
+  
+  "generated_files": [
+    {"file_id": "SF_001", "path": "./tests/conftest.py", "type": "config", "description": "pytest配置和fixtures"},
+    {"file_id": "SF_002", "path": "./tests/test_integration.py", "type": "test", "description": "完整测试脚本"},
+    {"file_id": "SF_003", "path": "./tests/config/test_config.yaml", "type": "config", "description": "测试环境配置"},
+    {"file_id": "SF_004", "path": "./tests/pytest.ini", "type": "config", "description": "pytest运行配置"},
+    {"file_id": "SF_005", "path": "./tests/requirements.txt", "type": "config", "description": "Python依赖包"}
+  ],
+  
+  "test_summary": {
+    "total_tests": 18,
+    "functional_tests": 6,
+    "integration_tests": 2,
+    "fault_tolerance_tests": 3,
+    "boundary_tests": 4,
+    "performance_tests": 2,
+    "p1_tests": 6,
+    "p2_tests": 8,
+    "p3_tests": 2
+  },
+  
+  "test_classes": {
+    "TestHDFSSparkFunctional": {"count": 6, "priority": "P1-P2"},
+    "TestHDFSSparkIntegration": {"count": 2, "priority": "P1"},
+    "TestHDFSSparkFaultTolerance": {"count": 3, "priority": "P2"},
+    "TestHDFSSparkBoundary": {"count": 4, "priority": "P2"},
+    "TestHDFSSparkPerformance": {"count": 2, "priority": "P3"}
+  },
+  
+  "improvements": [
+    "修正category数据为A-J字母",
+    "添加边界值测试数据(data_boundary.csv)",
+    "补充expected精确验证数据",
+    "增加数值验证逻辑",
+    "添加边界值测试类",
+    "增加Schema验证",
+    "增加count总和验证",
+    "使用pytest_configure注册markers"
+  ],
+  
+  "run_command": "pytest tests/ -v",
+  "run_p1_only": "pytest tests/ -v -m P1",
+  "run_boundary": "pytest tests/ -v -m boundary"
+}

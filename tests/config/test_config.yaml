@@ -1,0 +1,30 @@
+# 测试环境配置
+environment: test
+
+# HDFS配置
+hdfs:
+  namenode_url: "hdfs://localhost:9000"
+  webhdfs_url: "http://localhost:9870"
+  user: "root"
+  base_path: "/test"
+
+# Spark配置
+spark:
+  app_name: "HDFSSparkIntegrationTest"
+  master: "local[*]"
+  config:
+    spark.sql.warehouse.dir: "/tmp/spark-warehouse"
+    spark.driver.memory: "2g"
+    spark.executor.memory: "2g"
+
+# 数据配置
+data:
+  input_path: "./test_data/input"
+  output_path: "./test_data/output"
+  expected_path: "./test_data/expected"
+
+# 测试配置
+test:
+  timeout: 300
+  retry: 3
+  parallel: true
