@@ -1,0 +1,292 @@
+{
+  "component_name": "StarRocks",
+  "component_type": "database",
+  "version": "3.x",
+  
+  "component_roles": {
+    "supported_roles": ["source", "processor", "sink"],
+    "role_details": {
+      "source": {
+        "operations": ["read", "query", "export"],
+        "api": [
+          "SELECT FROM table",
+          "EXPORT TABLE",
+          "SHOW TABLES"
+        ],
+        "data_format": ["internal_table", "external_table"],
+        "description": "作为实时分析数据库，提供高速查询和数据导出能力"
+      },
+      "processor": {
+        "operations": ["analyze", "aggregate", "join", "query_external"],
+        "api": [
+          "SELECT with aggregation",
+          "JOIN tables",
+          "CREATE EXTERNAL TABLE",
+          "QUERY iceberg_catalog"
+        ],
+        "data_format": ["OLAP queries"],
+        "description": "作为OLAP引擎，执行实时分析、聚合计算、跨源查询"
+      },
+      "sink": {
+        "operations": ["write", "insert", "load", "stream_load"],
+        "api": [
+          "INSERT INTO table",
+          "STREAM LOAD",
+          "BROKER LOAD",
+          "INSERT INTO external_table"
+        ],
+        "data_format": ["CSV", "JSON", "Parquet"],
+        "description": "作为数据存储目标，支持高速数据导入和写入外部系统"
+      }
+    },
+    "cannot_act_as": [],
+    "reason": "StarRocks是实时分析数据库，具备存储、计算、外部表查询等综合能力"
+  },
+  
+  "component_interaction_rules": {
+    "as_source": {
+      "compatible_downstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "StarRocks -> Spark",
+          "api_mapping": {
+            "StarRocks": "EXPORT or JDBC",
+            "Spark": "spark.read.format('jdbc').load()"
+          }
+        },
+        {
+          "component_type": "data_lake",
+          "examples": ["Iceberg"],
+          "data_flow": "StarRocks -> Iceberg",
+          "api_mapping": {
+            "StarRocks": "INSERT INTO iceberg_external_table",
+            "Iceberg": "table.append()"
+          }
+        }
+      ]
+    },
+    "as_processor": {
+      "compatible_upstream": [
+        {
+          "component_type": "data_lake",
+          "examples": ["Iceberg"],
+          "data_flow": "Iceberg -> StarRocks",
+          "api_mapping": {
+            "Iceberg": "catalog.table",
+            "StarRocks": "CREATE EXTERNAL CATALOG 'iceberg_catalog'"
+          }
+        },
+        {
+          "component_type": "storage",
+          "examples": ["HDFS", "S3"],
+          "data_flow": "HDFS -> StarRocks",
+          "api_mapping": {
+            "HDFS": "data files",
+            "StarRocks": "BROKER LOAD FROM HDFS"
+          }
+        }
+      ],
+      "compatible_downstream": [
+        {
+          "component_type": "data_lake",
+          "examples": ["Iceberg"],
+          "data_flow": "StarRocks -> Iceberg",
+          "api_mapping": {
+            "StarRocks": "query result -> INSERT INTO iceberg",
+            "Iceberg": "new data files"
+          }
+        }
+      ]
+    },
+    "as_sink": {
+      "compatible_upstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Spark -> StarRocks",
+          "api_mapping": {
+            "Spark": "df.write.format('starrocks').save()",
+            "StarRocks": "STREAM LOAD"
+          }
+        },
+        {
+          "component_type": "streaming",
+          "examples": ["Kafka"],
+          "data_flow": "Kafka -> StarRocks",
+          "api_mapping": {
+            "Kafka": "messages",
+            "StarRocks": "ROUTINE LOAD FROM KAFKA"
+          }
+        },
+        {
+          "component_type": "data_lake",
+          "examples": ["Iceberg"],
+          "data_flow": "Iceberg -> StarRocks",
+          "api_mapping": {
+            "Iceberg": "table scan",
+            "StarRocks": "INSERT FROM iceberg_catalog.table"
+          }
+        }
+      ]
+    }
+  },
+  
+  "valid_data_flows": [
+    "Iceberg -> StarRocks (外表查询)",
+    "StarRocks -> Iceberg (写入数据湖)",
+    "Kafka -> StarRocks -> Iceberg",
+    "Spark -> StarRocks",
+    "HDFS -> StarRocks -> Iceberg"
+  ],
+  
+  "invalid_data_flows": [
+    "Iceberg -> Iceberg (无StarRocks参与)"
+  ],
+  
+  "iceberg_integration": {
+    "external_catalog": {
+      "description": "StarRocks创建Iceberg外部Catalog",
+      "sql": "CREATE EXTERNAL CATALOG iceberg_catalog PROPERTIES ('type'='iceberg', 'warehouse'='...')"
+    },
+    "external_table": {
+      "description": "通过Catalog访问Iceberg表",
+      "sql": "SELECT * FROM iceberg_catalog.db.table"
+    },
+    "insert_to_iceberg": {
+      "description": "将StarRocks数据写入Iceberg",
+      "sql": "INSERT INTO iceberg_catalog.db.table SELECT * FROM local_table"
+    },
+    "create_iceberg_table": {
+      "description": "在StarRocks中创建Iceberg表",
+      "sql": "CREATE TABLE db.table (id INT, name STRING) ENGINE='ICEBERG' PROPERTIES (...)"
+    }
+  },
+  
+  "core_concepts": {
+    "key_abstractions": [
+      {"name": "Internal Table", "type": "DataUnit", "description": "StarRocks内部OLAP表"},
+      {"name": "External Table", "type": "DataUnit", "description": "外部数据源映射表"},
+      {"name": "External Catalog", "type": "Architecture", "description": "外部数据源Catalog"},
+      {"name": "Partition", "type": "Architecture", "description": "表分区策略"},
+      {"name": "Stream Load", "type": "API", "description": "流式数据导入"},
+      {"name": "Broker Load", "type": "API", "description": "批量文件导入"},
+      {"name": "Routine Load", "type": "API", "description": "持续数据导入（Kafka等）"}
+    ],
+    "key_operations": [
+      "create_table",
+      "create_external_catalog",
+      "stream_load",
+      "query_iceberg",
+      "insert_to_iceberg",
+      "aggregate_query"
+    ]
+  },
+  
+  "test_scenarios": {
+    "functional": [
+      "创建内部表",
+      "数据导入",
+      "OLAP查询",
+      "聚合计算",
+      "创建Iceberg外部Catalog",
+      "查询Iceberg外表"
+    ],
+    "integration": [
+      "Iceberg外部表查询",
+      "StarRocks写入Iceberg",
+      "Iceberg <-> StarRocks双向同步",
+      "Spark写入StarRocks"
+    ],
+    "fault_tolerance": [
+      "Catalog不存在",
+      "Iceberg表不存在",
+      "连接超时",
+      "写入失败回滚",
+      "并发导入冲突"
+    ],
+    "performance": [
+      "OLAP查询性能",
+      "Stream Load性能",
+      "Iceberg外表查询性能",
+      "大规模聚合性能"
+    ]
+  },
+  
+  "api_reference": {
+    "create_iceberg_catalog": {
+      "api": "CREATE EXTERNAL CATALOG",
+      "params": ["catalog_name", "type", "warehouse", "hive_metastore_uris"],
+      "returns": "catalog created",
+      "example": "CREATE EXTERNAL CATALOG iceberg_catalog PROPERTIES ('type'='iceberg', 'iceberg.catalog.type'='hive', 'hive.metastore.uris'='thrift://hive:9083')"
+    },
+    "query_iceberg_table": {
+      "api": "SELECT FROM iceberg_catalog.db.table",
+      "params": ["catalog", "database", "table", "query_conditions"],
+      "returns": "query results",
+      "example": "SELECT * FROM iceberg_catalog.test_db.iceberg_table WHERE id > 100"
+    },
+    "insert_to_iceberg": {
+      "api": "INSERT INTO iceberg_catalog.db.table",
+      "params": ["target_table", "source_data"],
+      "returns": "rows inserted",
+      "example": "INSERT INTO iceberg_catalog.test_db.target_table SELECT * FROM local_table"
+    },
+    "create_iceberg_table_in_sr": {
+      "api": "CREATE TABLE with ENGINE='ICEBERG'",
+      "params": ["table_name", "columns", "engine", "properties"],
+      "returns": "table created",
+      "example": "CREATE TABLE sr_iceberg_table (id INT, name STRING) ENGINE='ICEBERG' PROPERTIES ('database'='db', 'table'='iceberg_table')"
+    },
+    "stream_load": {
+      "api": "curl -XPUT http://host:port/api/db/table/_stream_load",
+      "params": ["data", "format", "column_separator"],
+      "returns": "load status",
+      "example": "curl --location-trusted -u root: -T data.csv -H 'column_separator:,' http://localhost:8030/api/db/table/_stream_load"
+    }
+  },
+  
+  "data_requirements": {
+    "small": {"rows": 100, "purpose": "功能测试"},
+    "medium": {"rows": 100000, "purpose": "集成测试"},
+    "large": {"rows": 1000000, "purpose": "性能测试"}
+  },
+  
+  "environment_requirements": {
+    "starrocks": {
+      "version": "3.x",
+      "fe_port": 9030,
+      "fe_http_port": 8030,
+      "be_port": 9060,
+      "config": {
+        "enable_pipeline_engine": "true",
+        "enable_query_profile": "true"
+      }
+    },
+    "iceberg_catalog": {
+      "hive_metastore": "thrift://hive:9083",
+      "warehouse": "s3://bucket/warehouse"
+    }
+  },
+  
+  "common_issues": [
+    {
+      "issue": "Catalog连接失败",
+      "symptom": "Cannot connect to Hive Metastore",
+      "cause": "Hive服务未启动或网络不通",
+      "solution": "检查Hive服务和网络配置"
+    },
+    {
+      "issue": "Iceberg表不存在",
+      "symptom": "Table not found in catalog",
+      "cause": "Iceberg表未创建或Catalog配置错误",
+      "solution": "验证Iceberg表和Catalog配置"
+    },
+    {
+      "issue": "写入Iceberg失败",
+      "symptom": "Insert to iceberg failed",
+      "cause": "权限不足或路径错误",
+      "solution": "检查写入权限和warehouse路径"
+    }
+  ]
+}

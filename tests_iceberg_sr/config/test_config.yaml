@@ -1,0 +1,50 @@
+# Iceberg-StarRocks测试配置
+
+environment: test
+
+# StarRocks配置
+starrocks:
+  host: "localhost"
+  fe_port: 9030
+  fe_http_port: 8030
+  be_port: 9060
+  user: "root"
+  password: ""
+  database: "test"
+
+# Iceberg配置
+iceberg:
+  catalog_type: "hive"
+  hive_metastore_uris: "thrift://hive:9083"
+  warehouse: "hdfs://namenode:9000/warehouse/iceberg"
+  default_database: "test_db"
+
+# Hive配置
+hive:
+  metastore_port: 9083
+
+# HDFS配置
+hdfs:
+  namenode: "namenode"
+  namenode_port: 9000
+  namenode_http_port: 9870
+
+# 测试数据配置
+data:
+  iceberg_small: "/home/z00878808/gitstore/spark/test_data/iceberg_sr/iceberg_data_small.json"
+  iceberg_medium: "/home/z00878808/gitstore/spark/test_data/iceberg_sr/iceberg_data_medium.json"
+  starrocks_import: "/home/z00878808/gitstore/spark/test_data/iceberg_sr/starrocks_import_medium.csv"
+  expected_agg: "/home/z00878808/gitstore/spark/test_data/iceberg_sr/expected_aggregation.json"
+
+# 测试配置
+test:
+  timeout: 300
+  retry: 3
+  parallel: false
+
+# 性能阈值(ms)
+performance_thresholds:
+  iceberg_query: 10000
+  aggregation: 5000
+  join: 10000
+  stream_load: 3000

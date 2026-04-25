@@ -1,0 +1,408 @@
+{
+  "test_suite": {
+    "suite_id": "TS_ICEBERG_SR_001",
+    "suite_name": "Iceberg-StarRocks集成测试",
+    "timestamp": "2026-04-25T12:30:00Z",
+    "status": "success",
+    
+    "scenario_type": "integration",
+    "scenario_description": "测试Apache Iceberg数据湖与StarRocks实时分析数据库的集成对接",
+    
+    "components": ["Iceberg", "StarRocks"],
+    "role_sequence_validation": {
+      "sequence": "source -> processor -> sink (双向)",
+      "valid": true,
+      "reason": "Iceberg(source) <-> StarRocks(processor/sink) 双向数据流"
+    },
+    
+    "component_roles": {
+      "Iceberg": {"roles": ["source", "sink"], "type": "data_lake"},
+      "StarRocks": {"roles": ["source", "processor", "sink"], "type": "database"}
+    },
+    
+    "test_case_summary": {
+      "functional_count": 8,
+      "integration_count": 6,
+      "fault_tolerance_count": 5,
+      "performance_count": 4,
+      "total_count": 23
+    },
+    
+    "test_cases": {
+      "functional": [
+        {
+          "case_id": "TC_FUNC_001",
+          "case_name": "Iceberg创建表",
+          "component": "Iceberg",
+          "role": "sink",
+          "priority": "P1",
+          "description": "创建Iceberg数据表",
+          "api": "Catalog.createTable()",
+          "steps": [
+            {"step": 1, "action": "create_iceberg_table", "params": {"schema": "id, name, value, category, timestamp"}}
+          ],
+          "expected_result": {
+            "status": "success",
+            "table_exists": true,
+            "schema_valid": true
+          }
+        },
+        {
+          "case_id": "TC_FUNC_002",
+          "case_name": "Iceberg写入数据",
+          "component": "Iceberg",
+          "role": "sink",
+          "priority": "P1",
+          "description": "向Iceberg表写入测试数据",
+          "api": "Table.newAppend()",
+          "input_data": {"rows": 100, "file": "iceberg_test_data.parquet"},
+          "expected_result": {
+            "status": "success",
+            "snapshot_created": true,
+            "rows_written": 100
+          }
+        },
+        {
+          "case_id": "TC_FUNC_003",
+          "case_name": "StarRocks创建Iceberg外部Catalog",
+          "component": "StarRocks",
+          "role": "processor",
+          "priority": "P1",
+          "description": "在StarRocks中创建Iceberg外部Catalog",
+          "api": "CREATE EXTERNAL CATALOG",
+          "sql": "CREATE EXTERNAL CATALOG iceberg_catalog PROPERTIES ('type'='iceberg', 'iceberg.catalog.type'='hive', 'hive.metastore.uris'='thrift://hive:9083')",
+          "expected_result": {
+            "status": "success",
+            "catalog_created": true,
+            "catalog_type": "iceberg"
+          }
+        },
+        {
+          "case_id": "TC_FUNC_004",
+          "case_name": "StarRocks查询Iceberg外表",
+          "component": "StarRocks",
+          "role": "processor",
+          "priority": "P1",
+          "description": "通过外部Catalog查询Iceberg表数据",
+          "api": "SELECT FROM iceberg_catalog.db.table",
+          "sql": "SELECT * FROM iceberg_catalog.test_db.iceberg_table",
+          "expected_result": {
+            "status": "success",
+            "rows_returned": 100,
+            "schema_match": true
+          }
+        },
+        {
+          "case_id": "TC_FUNC_005",
+          "case_name": "StarRocks聚合查询Iceberg",
+          "component": "StarRocks",
+          "role": "processor",
+          "priority": "P1",
+          "description": "对Iceberg外表执行聚合分析",
+          "sql": "SELECT category, COUNT(*), SUM(value) FROM iceberg_catalog.test_db.iceberg_table GROUP BY category",
+          "expected_result": {
+            "status": "success",
+            "agg_result_correct": true,
+            "categories_count": 10
+          }
+        },
+        {
+          "case_id": "TC_FUNC_006",
+          "case_name": "StarRocks创建内部OLAP表",
+          "component": "StarRocks",
+          "role": "sink",
+          "priority": "P1",
+          "description": "创建StarRocks内部OLAP表",
+          "sql": "CREATE TABLE olap_table (id INT, name STRING, value DOUBLE) ENGINE='OLAP'",
+          "expected_result": {
+            "status": "success",
+            "table_created": true
+          }
+        },
+        {
+          "case_id": "TC_FUNC_007",
+          "case_name": "StarRocks数据导入",
+          "component": "StarRocks",
+          "role": "sink",
+          "priority": "P1",
+          "description": "通过Stream Load导入数据到StarRocks",
+          "api": "STREAM LOAD",
+          "input_data": {"file": "test_data.csv", "rows": 100},
+          "expected_result": {
+            "status": "success",
+            "rows_loaded": 100
+          }
+        },
+        {
+          "case_id": "TC_FUNC_008",
+          "case_name": "Iceberg快照查询",
+          "component": "Iceberg",
+          "role": "source",
+          "priority": "P2",
+          "description": "查询Iceberg表快照历史",
+          "api": "Table.snapshots()",
+          "expected_result": {
+            "status": "success",
+            "snapshots_listed": true,
+            "snapshot_count": ">0"
+          }
+        }
+      ],
+      
+      "integration": [
+        {
+          "case_id": "TC_INT_001",
+          "case_name": "Iceberg数据导入StarRocks完整流程",
+          "data_flow": "Iceberg -> StarRocks",
+          "role_sequence": "source -> processor",
+          "priority": "P1",
+          "description": "从Iceberg读取数据导入到StarRocks内部表",
+          "steps": [
+            {"step": 1, "action": "create_iceberg_table", "component": "Iceberg"},
+            {"step": 2, "action": "write_data_to_iceberg", "component": "Iceberg", "params": {"rows": 100}},
+            {"step": 3, "action": "create_iceberg_catalog", "component": "StarRocks"},
+            {"step": 4, "action": "create_starrocks_internal_table", "component": "StarRocks"},
+            {"step": 5, "action": "insert_from_iceberg", "component": "StarRocks", "sql": "INSERT INTO sr_table SELECT * FROM iceberg_catalog.db.iceberg_table"},
+            {"step": 6, "action": "verify_data", "expected": {"sr_rows": 100}}
+          ],
+          "expected_result": {
+            "status": "success",
+            "iceberg_data_written": true,
+            "starrocks_catalog_created": true,
+            "data_synced": true,
+            "row_count_match": true
+          }
+        },
+        {
+          "case_id": "TC_INT_002",
+          "case_name": "StarRocks数据写入Iceberg",
+          "data_flow": "StarRocks -> Iceberg",
+          "role_sequence": "processor -> sink",
+          "priority": "P1",
+          "description": "将StarRocks查询结果写入Iceberg",
+          "steps": [
+            {"step": 1, "action": "prepare_starrocks_data", "component": "StarRocks"},
+            {"step": 2, "action": "insert_to_iceberg", "component": "StarRocks", "sql": "INSERT INTO iceberg_catalog.db.target_table SELECT * FROM sr_source_table"},
+            {"step": 3, "action": "verify_iceberg_snapshot", "component": "Iceberg"}
+          ],
+          "expected_result": {
+            "status": "success",
+            "iceberg_new_snapshot": true,
+            "data_written": true
+          }
+        },
+        {
+          "case_id": "TC_INT_003",
+          "case_name": "Iceberg-StarRocks双向同步",
+          "data_flow": "Iceberg <-> StarRocks",
+          "role_sequence": "source <-> sink",
+          "priority": "P1",
+          "description": "验证Iceberg和StarRocks之间的双向数据同步",
+          "steps": [
+            {"step": 1, "action": "write_to_iceberg", "rows": 50},
+            {"step": 2, "action": "sync_to_starrocks"},
+            {"step": 3, "action": "modify_in_starrocks"},
+            {"step": 4, "action": "sync_back_to_iceberg"},
+            {"step": 5, "action": "verify_consistency"}
+          ],
+          "expected_result": {
+            "status": "success",
+            "bidirectional_sync": true,
+            "data_consistent": true
+          }
+        },
+        {
+          "case_id": "TC_INT_004",
+          "case_name": "StarRocks直接查询Iceberg进行OLAP分析",
+          "data_flow": "Iceberg -> StarRocks",
+          "priority": "P2",
+          "description": "使用StarRocks对Iceberg数据进行复杂OLAP分析",
+          "sql": "SELECT category, AVG(value), MAX(value), MIN(value) FROM iceberg_catalog.db.table GROUP BY category ORDER BY category",
+          "expected_result": {
+            "status": "success",
+            "olap_analysis_success": true,
+            "result_correct": true
+          }
+        },
+        {
+          "case_id": "TC_INT_005",
+          "case_name": "Iceberg外表JOIN内部表",
+          "data_flow": "Iceberg + StarRocks internal",
+          "priority": "P2",
+          "description": "StarRocks中Iceberg外表与内部表进行JOIN查询",
+          "sql": "SELECT i.id, i.name, s.extra_col FROM iceberg_catalog.db.iceberg_table i JOIN starrocks_db.internal_table s ON i.id = s.id",
+          "expected_result": {
+            "status": "success",
+            "join_success": true,
+            "result_rows": "expected"
+          }
+        },
+        {
+          "case_id": "TC_INT_006",
+          "case_name": "Iceberg Schema Evolution后StarRocks查询",
+          "data_flow": "Iceberg -> StarRocks",
+          "priority": "P2",
+          "description": "Iceberg表Schema变更后StarRocks能否正确查询",
+          "steps": [
+            {"step": 1, "action": "evolve_iceberg_schema", "component": "Iceberg", "params": {"add_column": "new_col"}},
+            {"step": 2, "action": "query_from_starrocks", "component": "StarRocks", "sql": "SELECT new_col FROM iceberg_catalog.db.table"}
+          ],
+          "expected_result": {
+            "status": "success",
+            "schema_evolution_visible": true,
+            "new_column_queryable": true
+          }
+        }
+      ],
+      
+      "fault_tolerance": [
+        {
+          "case_id": "TC_FT_001",
+          "case_name": "Iceberg表不存在时StarRocks查询",
+          "component": "StarRocks",
+          "priority": "P2",
+          "description": "查询不存在的Iceberg外表",
+          "sql": "SELECT * FROM iceberg_catalog.db.nonexistent_table",
+          "expected_result": {
+            "status": "error",
+            "error_type": "TableNotFound",
+            "error_message": "Table does not exist"
+          }
+        },
+        {
+          "case_id": "TC_FT_002",
+          "case_name": "Catalog不存在",
+          "component": "StarRocks",
+          "priority": "P2",
+          "description": "使用不存在的Iceberg Catalog",
+          "sql": "SELECT * FROM nonexistent_catalog.db.table",
+          "expected_result": {
+            "status": "error",
+            "error_type": "CatalogNotFound"
+          }
+        },
+        {
+          "case_id": "TC_FT_003",
+          "case_name": "Hive Metastore连接失败",
+          "component": "StarRocks",
+          "priority": "P2",
+          "description": "Hive Metastore不可用时StarRocks查询Iceberg",
+          "expected_result": {
+            "status": "error",
+            "error_type": "ConnectionError",
+            "handling": "正确报告连接失败"
+          }
+        },
+        {
+          "case_id": "TC_FT_004",
+          "case_name": "写入Iceberg权限不足",
+          "component": "StarRocks",
+          "priority": "P2",
+          "description": "StarRocks写入Iceberg时权限不足",
+          "expected_result": {
+            "status": "error",
+            "error_type": "PermissionDenied",
+            "handling": "正确报告权限错误"
+          }
+        },
+        {
+          "case_id": "TC_FT_005",
+          "case_name": "Iceberg快照不存在",
+          "component": "Iceberg",
+          "priority": "P2",
+          "description": "Time Travel到不存在的快照",
+          "api": "useSnapshot(nonexistent_id)",
+          "expected_result": {
+            "status": "error",
+            "error_type": "SnapshotNotFound"
+          }
+        }
+      ],
+      
+      "performance": [
+        {
+          "case_id": "TC_PERF_001",
+          "case_name": "Iceberg外表查询性能",
+          "component": "StarRocks",
+          "priority": "P3",
+          "data_size": "medium",
+          "rows": 100000,
+          "description": "测试StarRocks查询Iceberg外表的性能",
+          "expected_result": {
+            "threshold_seconds": 10,
+            "baseline": {"query_time_ms": 5000}
+          }
+        },
+        {
+          "case_id": "TC_PERF_002",
+          "case_name": "StarRocks写入Iceberg性能",
+          "component": "StarRocks",
+          "priority": "P3",
+          "data_size": "medium",
+          "rows": 10000,
+          "description": "测试StarRocks写入Iceberg的性能",
+          "expected_result": {
+            "threshold_seconds": 5,
+            "baseline": {"write_time_ms": 3000}
+          }
+        },
+        {
+          "case_id": "TC_PERF_003",
+          "case_name": "Iceberg聚合分析性能",
+          "component": "StarRocks",
+          "priority": "P3",
+          "data_size": "medium",
+          "rows": 100000,
+          "description": "测试对Iceberg数据执行聚合查询的性能",
+          "expected_result": {
+            "threshold_seconds": 5,
+            "baseline": {"agg_time_ms": 2000}
+          }
+        },
+        {
+          "case_id": "TC_PERF_004",
+          "case_name": "Iceberg JOIN内部表性能",
+          "component": "StarRocks",
+          "priority": "P3",
+          "data_size": "medium",
+          "description": "测试Iceberg外表与内部表JOIN性能",
+          "expected_result": {
+            "threshold_seconds": 10,
+            "baseline": {"join_time_ms": 5000}
+          }
+        }
+      ]
+    },
+    
+    "data_requirements": {
+      "iceberg_data_schema": {
+        "id": {"type": "integer", "nullable": false},
+        "name": {"type": "string", "nullable": false},
+        "value": {"type": "double", "nullable": false},
+        "category": {"type": "string", "values": ["A-J"]},
+        "timestamp": {"type": "timestamp", "format": "ISO8601"}
+      },
+      "data_sizes": {
+        "small": {"rows": 100, "purpose": "功能测试"},
+        "medium": {"rows": 10000, "purpose": "集成测试"},
+        "large": {"rows": 100000, "purpose": "性能测试"}
+      }
+    },
+    
+    "environment_requirements": {
+      "iceberg": {
+        "version": "1.5.x",
+        "catalog": "Hive Metastore",
+        "warehouse": "hdfs://namenode:9000/warehouse"
+      },
+      "starrocks": {
+        "version": "3.x",
+        "fe_port": 9030,
+        "be_port": 9060
+      },
+      "hive": {
+        "metastore_port": 9083
+      }
+    }
+  }
+}

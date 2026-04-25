@@ -1,0 +1,125 @@
+{
+  "prompt_id": "P_ICEBERG_SR_001",
+  "timestamp": "2026-04-25T12:20:00Z",
+  "original_input": "Iceberg对接StarRocks",
+  "status": "success",
+  "errors": [],
+  
+  "parsed_elements": {
+    "scenario_type": "integration",
+    "scenario_description": "测试Apache Iceberg数据湖与StarRocks实时分析数据库的集成对接，包括Iceberg表查询、数据同步、联合分析",
+    
+    "components": [
+      {
+        "name": "Iceberg",
+        "role": "source",
+        "operation": "read",
+        "confidence": 1.0,
+        "position": 0,
+        "type": "data_lake"
+      },
+      {
+        "name": "StarRocks",
+        "role": "processor",
+        "operation": "query_analyze",
+        "confidence": 1.0,
+        "position": 1,
+        "type": "database"
+      },
+      {
+        "name": "StarRocks",
+        "role": "sink",
+        "operation": "write",
+        "confidence": 0.8,
+        "position": 2,
+        "type": "database"
+      }
+    ],
+    
+    "data_flow": {
+      "flow_type": "bidirectional",
+      "sequence": [
+        "Iceberg.table_read",
+        "StarRocks.external_table_query",
+        "StarRocks.data_import",
+        "Iceberg.table_write"
+      ],
+      "description": "Iceberg <-> StarRocks 双向数据对接",
+      "role_sequence": "source -> processor -> sink (双向)",
+      "valid": true,
+      "validation_reason": "StarRocks可查询Iceberg外表，也可将数据写入Iceberg"
+    },
+    
+    "integration_features": {
+      "iceberg_as_catalog": {
+        "description": "Iceberg作为数据湖表格式，提供表元数据管理",
+        "operations": ["create_table", "write_data", "snapshot_management", "schema_evolution"]
+      },
+      "starrocks_external_table": {
+        "description": "StarRocks创建Iceberg外表，直接查询数据湖数据",
+        "operations": ["create_external_table", "query_iceberg", "analyze_data"]
+      },
+      "data_sync": {
+        "description": "数据从StarRocks写入Iceberg或反向同步",
+        "operations": ["insert_into_iceberg", "export_to_iceberg"]
+      }
+    },
+    
+    "data_requirements": {
+      "input": {
+        "source": "Iceberg",
+        "type": "table_data",
+        "format": "Parquet/ORC",
+        "size": "medium",
+        "estimated_rows": 100000,
+        "schema": {
+          "id": "integer",
+          "name": "string",
+          "value": "double",
+          "category": "string",
+          "timestamp": "timestamp"
+        }
+      },
+      "processing": {
+        "type": "query_analyze",
+        "operations": ["select", "aggregate", "join", "filter"],
+        "query_types": ["OLAP查询", "实时分析", "聚合统计"]
+      },
+      "output": {
+        "target": "StarRocks/Iceberg",
+        "type": "query_results/new_table",
+        "format": "internal_table/Parquet"
+      }
+    },
+    
+    "validation_points": [
+      {"point_id": "VP_001", "point": "external_table_creation", "description": "Iceberg外表创建成功", "priority": "P1"},
+      {"point_id": "VP_002", "point": "query_accuracy", "description": "StarRocks查询Iceberg数据正确", "priority": "P1"},
+      {"point_id": "VP_003", "point": "write_to_iceberg", "description": "StarRocks写入Iceberg成功", "priority": "P1"},
+      {"point_id": "VP_004", "point": "snapshot_consistency", "description": "Iceberg快照一致性", "priority": "P2"},
+      {"point_id": "VP_005", "point": "schema_evolution", "description": "Schema变更兼容性", "priority": "P2"}
+    ],
+    
+    "test_coverage_requirements": {
+      "single_component": true,
+      "component_combination": true,
+      "fault_tolerance": true,
+      "performance": true,
+      "estimated_test_count": 20
+    }
+  },
+  
+  "component_cards_needed": ["ICEBERG_CARD.json", "STARROCKS_CARD.json"],
+  "cards_status": {
+    "ICEBERG_CARD.json": "need_generate",
+    "STARROCKS_CARD.json": "need_generate"
+  },
+  
+  "suggested_next_steps": [
+    {"skill": "component-card-generator", "reason": "生成Iceberg和StarRocks知识卡片", "completed": false},
+    {"skill": "scenario-planner", "reason": "生成集成测试用例", "completed": false},
+    {"skill": "data-generator", "reason": "生成测试数据", "completed": false},
+    {"skill": "test-script-generator", "reason": "生成测试脚本", "completed": false},
+    {"skill": "env-config-generator", "reason": "生成环境配置", "completed": false}
+  ]
+}

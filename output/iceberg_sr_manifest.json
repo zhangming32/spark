@@ -1,0 +1,63 @@
+{
+  "test_suite_id": "TS_ICEBERG_SR_001",
+  "generation_timestamp": "2026-04-25T12:58:00Z",
+  "status": "success",
+  
+  "generated_files": {
+    "parsed_prompt": "./output/iceberg_sr_parsed_prompt.json",
+    "component_cards": [
+      "./output/knowledge_cards/json/ICEBERG_CARD.json",
+      "./output/knowledge_cards/json/STARROCKS_CARD.json"
+    ],
+    "test_cases": "./output/iceberg_sr_test_cases.json",
+    "test_data": [
+      "./test_data/iceberg_sr/iceberg_data_small.json",
+      "./test_data/iceberg_sr/iceberg_data_medium.json",
+      "./test_data/iceberg_sr/starrocks_import_small.csv",
+      "./test_data/iceberg_sr/starrocks_import_medium.csv",
+      "./test_data/iceberg_sr/expected_aggregation.json"
+    ],
+    "test_scripts": [
+      "./tests_iceberg_sr/conftest.py",
+      "./tests_iceberg_sr/test_iceberg_sr_functional.py",
+      "./tests_iceberg_sr/test_iceberg_sr_integration.py",
+      "./tests_iceberg_sr/test_iceberg_sr_fault_tolerance.py",
+      "./tests_iceberg_sr/test_iceberg_sr_performance.py"
+    ],
+    "environment": [
+      "./environment_iceberg_sr/docker-compose.yaml",
+      "./environment_iceberg_sr/scripts/setup_env.sh",
+      "./environment_iceberg_sr/scripts/start_services.sh",
+      "./environment_iceberg_sr/scripts/stop_services.sh",
+      "./environment_iceberg_sr/scripts/check_health.sh",
+      "./environment_iceberg_sr/scripts/cleanup.sh"
+    ]
+  },
+  
+  "test_summary": {
+    "total_tests": 23,
+    "functional_tests": 8,
+    "integration_tests": 6,
+    "fault_tolerance_tests": 5,
+    "performance_tests": 4,
+    "p1_tests": 12,
+    "p2_tests": 7,
+    "p3_tests": 4
+  },
+  
+  "components": ["Iceberg", "StarRocks"],
+  "integration_features": [
+    "Iceberg外部Catalog创建",
+    "StarRocks查询Iceberg外表",
+    "StarRocks写入Iceberg",
+    "Iceberg外表JOIN内部表",
+    "Schema Evolution兼容"
+  ],
+  
+  "run_commands": [
+    "cd environment_iceberg_sr && ./scripts/start_services.sh",
+    "pytest tests_iceberg_sr/ -v",
+    "pytest tests_iceberg_sr/ -v -m integration",
+    "pytest tests_iceberg_sr/ -v -m P1"
+  ]
+}

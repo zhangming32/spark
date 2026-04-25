@@ -1,0 +1,702 @@
+[
+  {
+    "id": 1,
+    "name": "user_1",
+    "value": 466.79,
+    "category": "J",
+    "timestamp": "2024-01-15T10:01:00Z"
+  },
+  {
+    "id": 2,
+    "name": "user_2",
+    "value": 640.26,
+    "category": "F",
+    "timestamp": "2024-01-15T10:02:00Z"
+  },
+  {
+    "id": 3,
+    "name": "user_3",
+    "value": 517.71,
+    "category": "A",
+    "timestamp": "2024-01-15T10:03:00Z"
+  },
+  {
+    "id": 4,
+    "name": "user_4",
+    "value": 79.45,
+    "category": "A",
+    "timestamp": "2024-01-15T10:04:00Z"
+  },
+  {
+    "id": 5,
+    "name": "user_5",
+    "value": 368.55,
+    "category": "G",
+    "timestamp": "2024-01-15T10:05:00Z"
+  },
+  {
+    "id": 6,
+    "name": "user_6",
+    "value": 926.87,
+    "category": "G",
+    "timestamp": "2024-01-15T10:06:00Z"
+  },
+  {
+    "id": 7,
+    "name": "user_7",
+    "value": 663.57,
+    "category": "J",
+    "timestamp": "2024-01-15T10:07:00Z"
+  },
+  {
+    "id": 8,
+    "name": "user_8",
+    "value": 506.81,
+    "category": "B",
+    "timestamp": "2024-01-15T10:08:00Z"
+  },
+  {
+    "id": 9,
+    "name": "user_9",
+    "value": 415.47,
+    "category": "D",
+    "timestamp": "2024-01-15T10:09:00Z"
+  },
+  {
+    "id": 10,
+    "name": "user_10",
+    "value": 624.33,
+    "category": "D",
+    "timestamp": "2024-01-15T10:10:00Z"
+  },
+  {
+    "id": 11,
+    "name": "user_11",
+    "value": 130.02,
+    "category": "A",
+    "timestamp": "2024-01-15T10:11:00Z"
+  },
+  {
+    "id": 12,
+    "name": "user_12",
+    "value": 890.41,
+    "category": "D",
+    "timestamp": "2024-01-15T10:12:00Z"
+  },
+  {
+    "id": 13,
+    "name": "user_13",
+    "value": 761.82,
+    "category": "G",
+    "timestamp": "2024-01-15T10:13:00Z"
+  },
+  {
+    "id": 14,
+    "name": "user_14",
+    "value": 96.69,
+    "category": "F",
+    "timestamp": "2024-01-15T10:14:00Z"
+  },
+  {
+    "id": 15,
+    "name": "user_15",
+    "value": 183.59,
+    "category": "F",
+    "timestamp": "2024-01-15T10:15:00Z"
+  },
+  {
+    "id": 16,
+    "name": "user_16",
+    "value": 360.16,
+    "category": "G",
+    "timestamp": "2024-01-15T10:16:00Z"
+  },
+  {
+    "id": 17,
+    "name": "user_17",
+    "value": 745.05,
+    "category": "B",
+    "timestamp": "2024-01-15T10:17:00Z"
+  },
+  {
+    "id": 18,
+    "name": "user_18",
+    "value": 869.46,
+    "category": "B",
+    "timestamp": "2024-01-15T10:18:00Z"
+  },
+  {
+    "id": 19,
+    "name": "user_19",
+    "value": 5.01,
+    "category": "B",
+    "timestamp": "2024-01-15T10:19:00Z"
+  },
+  {
+    "id": 20,
+    "name": "user_20",
+    "value": 141.14,
+    "category": "H",
+    "timestamp": "2024-01-15T10:20:00Z"
+  },
+  {
+    "id": 21,
+    "name": "user_21",
+    "value": 347.35,
+    "category": "C",
+    "timestamp": "2024-01-15T10:21:00Z"
+  },
+  {
+    "id": 22,
+    "name": "user_22",
+    "value": 310.82,
+    "category": "H",
+    "timestamp": "2024-01-15T10:22:00Z"
+  },
+  {
+    "id": 23,
+    "name": "user_23",
+    "value": 54.62,
+    "category": "D",
+    "timestamp": "2024-01-15T10:23:00Z"
+  },
+  {
+    "id": 24,
+    "name": "user_24",
+    "value": 788.72,
+    "category": "B",
+    "timestamp": "2024-01-15T10:24:00Z"
+  },
+  {
+    "id": 25,
+    "name": "user_25",
+    "value": 553.33,
+    "category": "I",
+    "timestamp": "2024-01-15T10:25:00Z"
+  },
+  {
+    "id": 26,
+    "name": "user_26",
+    "value": 893.68,
+    "category": "H",
+    "timestamp": "2024-01-15T10:26:00Z"
+  },
+  {
+    "id": 27,
+    "name": "user_27",
+    "value": 784.7,
+    "category": "A",
+    "timestamp": "2024-01-15T10:27:00Z"
+  },
+  {
+    "id": 28,
+    "name": "user_28",
+    "value": 399.88,
+    "category": "I",
+    "timestamp": "2024-01-15T10:28:00Z"
+  },
+  {
+    "id": 29,
+    "name": "user_29",
+    "value": 38.05,
+    "category": "G",
+    "timestamp": "2024-01-15T10:29:00Z"
+  },
+  {
+    "id": 30,
+    "name": "user_30",
+    "value": 604.65,
+    "category": "A",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 31,
+    "name": "user_31",
+    "value": 271.69,
+    "category": "D",
+    "timestamp": "2024-01-15T10:31:00Z"
+  },
+  {
+    "id": 32,
+    "name": "user_32",
+    "value": 777.65,
+    "category": "G",
+    "timestamp": "2024-01-15T10:32:00Z"
+  },
+  {
+    "id": 33,
+    "name": "user_33",
+    "value": 597.23,
+    "category": "E",
+    "timestamp": "2024-01-15T10:33:00Z"
+  },
+  {
+    "id": 34,
+    "name": "user_34",
+    "value": 455.9,
+    "category": "B",
+    "timestamp": "2024-01-15T10:34:00Z"
+  },
+  {
+    "id": 35,
+    "name": "user_35",
+    "value": 594.23,
+    "category": "F",
+    "timestamp": "2024-01-15T10:35:00Z"
+  },
+  {
+    "id": 36,
+    "name": "user_36",
+    "value": 497.33,
+    "category": "E",
+    "timestamp": "2024-01-15T10:36:00Z"
+  },
+  {
+    "id": 37,
+    "name": "user_37",
+    "value": 999.9,
+    "category": "D",
+    "timestamp": "2024-01-15T10:37:00Z"
+  },
+  {
+    "id": 38,
+    "name": "user_38",
+    "value": 821.04,
+    "category": "A",
+    "timestamp": "2024-01-15T10:38:00Z"
+  },
+  {
+    "id": 39,
+    "name": "user_39",
+    "value": 923.61,
+    "category": "E",
+    "timestamp": "2024-01-15T10:39:00Z"
+  },
+  {
+    "id": 40,
+    "name": "user_40",
+    "value": 909.21,
+    "category": "I",
+    "timestamp": "2024-01-15T10:40:00Z"
+  },
+  {
+    "id": 41,
+    "name": "user_41",
+    "value": 34.51,
+    "category": "H",
+    "timestamp": "2024-01-15T10:41:00Z"
+  },
+  {
+    "id": 42,
+    "name": "user_42",
+    "value": 934.56,
+    "category": "I",
+    "timestamp": "2024-01-15T10:42:00Z"
+  },
+  {
+    "id": 43,
+    "name": "user_43",
+    "value": 287.57,
+    "category": "D",
+    "timestamp": "2024-01-15T10:43:00Z"
+  },
+  {
+    "id": 44,
+    "name": "user_44",
+    "value": 487.52,
+    "category": "C",
+    "timestamp": "2024-01-15T10:44:00Z"
+  },
+  {
+    "id": 45,
+    "name": "user_45",
+    "value": 265.44,
+    "category": "D",
+    "timestamp": "2024-01-15T10:45:00Z"
+  },
+  {
+    "id": 46,
+    "name": "user_46",
+    "value": 181.95,
+    "category": "I",
+    "timestamp": "2024-01-15T10:46:00Z"
+  },
+  {
+    "id": 47,
+    "name": "user_47",
+    "value": 835.84,
+    "category": "A",
+    "timestamp": "2024-01-15T10:47:00Z"
+  },
+  {
+    "id": 48,
+    "name": "user_48",
+    "value": 517.98,
+    "category": "A",
+    "timestamp": "2024-01-15T10:48:00Z"
+  },
+  {
+    "id": 49,
+    "name": "user_49",
+    "value": 460.87,
+    "category": "B",
+    "timestamp": "2024-01-15T10:49:00Z"
+  },
+  {
+    "id": 50,
+    "name": "user_50",
+    "value": 649.66,
+    "category": "E",
+    "timestamp": "2024-01-15T10:50:00Z"
+  },
+  {
+    "id": 51,
+    "name": "user_51",
+    "value": 43.67,
+    "category": "B",
+    "timestamp": "2024-01-15T10:51:00Z"
+  },
+  {
+    "id": 52,
+    "name": "user_52",
+    "value": 703.14,
+    "category": "I",
+    "timestamp": "2024-01-15T10:52:00Z"
+  },
+  {
+    "id": 53,
+    "name": "user_53",
+    "value": 56.06,
+    "category": "H",
+    "timestamp": "2024-01-15T10:53:00Z"
+  },
+  {
+    "id": 54,
+    "name": "user_54",
+    "value": 599.12,
+    "category": "E",
+    "timestamp": "2024-01-15T10:54:00Z"
+  },
+  {
+    "id": 55,
+    "name": "user_55",
+    "value": 971.88,
+    "category": "F",
+    "timestamp": "2024-01-15T10:55:00Z"
+  },
+  {
+    "id": 56,
+    "name": "user_56",
+    "value": 666.13,
+    "category": "C",
+    "timestamp": "2024-01-15T10:56:00Z"
+  },
+  {
+    "id": 57,
+    "name": "user_57",
+    "value": 287.66,
+    "category": "A",
+    "timestamp": "2024-01-15T10:57:00Z"
+  },
+  {
+    "id": 58,
+    "name": "user_58",
+    "value": 883.57,
+    "category": "F",
+    "timestamp": "2024-01-15T10:58:00Z"
+  },
+  {
+    "id": 59,
+    "name": "user_59",
+    "value": 992.26,
+    "category": "B",
+    "timestamp": "2024-01-15T10:59:00Z"
+  },
+  {
+    "id": 60,
+    "name": "user_60",
+    "value": 669.72,
+    "category": "G",
+    "timestamp": "2024-01-15T11:00:00Z"
+  },
+  {
+    "id": 61,
+    "name": "user_61",
+    "value": 479.81,
+    "category": "I",
+    "timestamp": "2024-01-15T11:01:00Z"
+  },
+  {
+    "id": 62,
+    "name": "user_62",
+    "value": 237.65,
+    "category": "B",
+    "timestamp": "2024-01-15T11:02:00Z"
+  },
+  {
+    "id": 63,
+    "name": "user_63",
+    "value": 958.45,
+    "category": "D",
+    "timestamp": "2024-01-15T11:03:00Z"
+  },
+  {
+    "id": 64,
+    "name": "user_64",
+    "value": 824.54,
+    "category": "E",
+    "timestamp": "2024-01-15T11:04:00Z"
+  },
+  {
+    "id": 65,
+    "name": "user_65",
+    "value": 275.73,
+    "category": "J",
+    "timestamp": "2024-01-15T11:05:00Z"
+  },
+  {
+    "id": 66,
+    "name": "user_66",
+    "value": 930.11,
+    "category": "G",
+    "timestamp": "2024-01-15T11:06:00Z"
+  },
+  {
+    "id": 67,
+    "name": "user_67",
+    "value": 372.72,
+    "category": "F",
+    "timestamp": "2024-01-15T11:07:00Z"
+  },
+  {
+    "id": 68,
+    "name": "user_68",
+    "value": 758.89,
+    "category": "H",
+    "timestamp": "2024-01-15T11:08:00Z"
+  },
+  {
+    "id": 69,
+    "name": "user_69",
+    "value": 843.49,
+    "category": "F",
+    "timestamp": "2024-01-15T11:09:00Z"
+  },
+  {
+    "id": 70,
+    "name": "user_70",
+    "value": 234.23,
+    "category": "G",
+    "timestamp": "2024-01-15T11:10:00Z"
+  },
+  {
+    "id": 71,
+    "name": "user_71",
+    "value": 427.71,
+    "category": "C",
+    "timestamp": "2024-01-15T11:11:00Z"
+  },
+  {
+    "id": 72,
+    "name": "user_72",
+    "value": 225.71,
+    "category": "C",
+    "timestamp": "2024-01-15T11:12:00Z"
+  },
+  {
+    "id": 73,
+    "name": "user_73",
+    "value": 680.87,
+    "category": "G",
+    "timestamp": "2024-01-15T11:13:00Z"
+  },
+  {
+    "id": 74,
+    "name": "user_74",
+    "value": 486.71,
+    "category": "D",
+    "timestamp": "2024-01-15T11:14:00Z"
+  },
+  {
+    "id": 75,
+    "name": "user_75",
+    "value": 434.3,
+    "category": "G",
+    "timestamp": "2024-01-15T11:15:00Z"
+  },
+  {
+    "id": 76,
+    "name": "user_76",
+    "value": 916.43,
+    "category": "A",
+    "timestamp": "2024-01-15T11:16:00Z"
+  },
+  {
+    "id": 77,
+    "name": "user_77",
+    "value": 623.96,
+    "category": "B",
+    "timestamp": "2024-01-15T11:17:00Z"
+  },
+  {
+    "id": 78,
+    "name": "user_78",
+    "value": 959.96,
+    "category": "F",
+    "timestamp": "2024-01-15T11:18:00Z"
+  },
+  {
+    "id": 79,
+    "name": "user_79",
+    "value": 321.01,
+    "category": "C",
+    "timestamp": "2024-01-15T11:19:00Z"
+  },
+  {
+    "id": 80,
+    "name": "user_80",
+    "value": 733.53,
+    "category": "B",
+    "timestamp": "2024-01-15T11:20:00Z"
+  },
+  {
+    "id": 81,
+    "name": "user_81",
+    "value": 544.65,
+    "category": "I",
+    "timestamp": "2024-01-15T11:21:00Z"
+  },
+  {
+    "id": 82,
+    "name": "user_82",
+    "value": 390.56,
+    "category": "I",
+    "timestamp": "2024-01-15T11:22:00Z"
+  },
+  {
+    "id": 83,
+    "name": "user_83",
+    "value": 505.91,
+    "category": "H",
+    "timestamp": "2024-01-15T11:23:00Z"
+  },
+  {
+    "id": 84,
+    "name": "user_84",
+    "value": 685.23,
+    "category": "B",
+    "timestamp": "2024-01-15T11:24:00Z"
+  },
+  {
+    "id": 85,
+    "name": "user_85",
+    "value": 231.76,
+    "category": "B",
+    "timestamp": "2024-01-15T11:25:00Z"
+  },
+  {
+    "id": 86,
+    "name": "user_86",
+    "value": 120.46,
+    "category": "C",
+    "timestamp": "2024-01-15T11:26:00Z"
+  },
+  {
+    "id": 87,
+    "name": "user_87",
+    "value": 143.62,
+    "category": "H",
+    "timestamp": "2024-01-15T11:27:00Z"
+  },
+  {
+    "id": 88,
+    "name": "user_88",
+    "value": 642.56,
+    "category": "C",
+    "timestamp": "2024-01-15T11:28:00Z"
+  },
+  {
+    "id": 89,
+    "name": "user_89",
+    "value": 926.78,
+    "category": "D",
+    "timestamp": "2024-01-15T11:29:00Z"
+  },
+  {
+    "id": 90,
+    "name": "user_90",
+    "value": 554.26,
+    "category": "A",
+    "timestamp": "2024-01-15T11:30:00Z"
+  },
+  {
+    "id": 91,
+    "name": "user_91",
+    "value": 986.3,
+    "category": "D",
+    "timestamp": "2024-01-15T11:31:00Z"
+  },
+  {
+    "id": 92,
+    "name": "user_92",
+    "value": 338.27,
+    "category": "H",
+    "timestamp": "2024-01-15T11:32:00Z"
+  },
+  {
+    "id": 93,
+    "name": "user_93",
+    "value": 992.2,
+    "category": "J",
+    "timestamp": "2024-01-15T11:33:00Z"
+  },
+  {
+    "id": 94,
+    "name": "user_94",
+    "value": 330.68,
+    "category": "C",
+    "timestamp": "2024-01-15T11:34:00Z"
+  },
+  {
+    "id": 95,
+    "name": "user_95",
+    "value": 960.78,
+    "category": "C",
+    "timestamp": "2024-01-15T11:35:00Z"
+  },
+  {
+    "id": 96,
+    "name": "user_96",
+    "value": 918.28,
+    "category": "J",
+    "timestamp": "2024-01-15T11:36:00Z"
+  },
+  {
+    "id": 97,
+    "name": "user_97",
+    "value": 484.72,
+    "category": "E",
+    "timestamp": "2024-01-15T11:37:00Z"
+  },
+  {
+    "id": 98,
+    "name": "user_98",
+    "value": 931.58,
+    "category": "J",
+    "timestamp": "2024-01-15T11:38:00Z"
+  },
+  {
+    "id": 99,
+    "name": "user_99",
+    "value": 946.35,
+    "category": "C",
+    "timestamp": "2024-01-15T11:39:00Z"
+  },
+  {
+    "id": 100,
+    "name": "user_100",
+    "value": 31.47,
+    "category": "J",
+    "timestamp": "2024-01-15T11:40:00Z"
+  }
+]

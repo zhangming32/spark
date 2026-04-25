@@ -1,0 +1,248 @@
+{
+  "component_name": "Iceberg",
+  "component_type": "data_lake",
+  "version": "1.5.x",
+  
+  "component_roles": {
+    "supported_roles": ["source", "sink"],
+    "role_details": {
+      "source": {
+        "operations": ["read", "query", "snapshot_read", "time_travel"],
+        "api": [
+          "Table.scan()",
+          "Table.newScan()",
+          "Snapshot.read()",
+          "Table.history()"
+        ],
+        "data_format": ["Parquet", "ORC", "Avro"],
+        "description": "作为数据湖表格式，提供数据读取和快照查询能力"
+      },
+      "sink": {
+        "operations": ["write", "append", "overwrite", "delete", "upsert"],
+        "api": [
+          "Table.newAppend()",
+          "Table.newOverwrite()",
+          "Table.newDelete()",
+          "Table.newUpsert()",
+          "FileIO.write()"
+        ],
+        "data_format": ["Parquet", "ORC", "Avro"],
+        "description": "作为数据存储目标，接收数据写入，管理快照和分区"
+      }
+    },
+    "cannot_act_as": ["processor"],
+    "reason": "Iceberg是表格式元数据层，不具备计算能力，需要配合Spark/Flink等引擎进行计算"
+  },
+  
+  "component_interaction_rules": {
+    "as_source": {
+      "compatible_downstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink", "Trino"],
+          "data_flow": "Iceberg -> Spark",
+          "api_mapping": {
+            "Iceberg": "table.scan()",
+            "Spark": "spark.read.format('iceberg').load(table)"
+          }
+        },
+        {
+          "component_type": "database",
+          "examples": ["StarRocks", "Doris"],
+          "data_flow": "Iceberg -> StarRocks",
+          "api_mapping": {
+            "Iceberg": "catalog + table location",
+            "StarRocks": "CREATE EXTERNAL TABLE ENGINE='ICEBERG'"
+          }
+        }
+      ],
+      "incompatible_downstream": [
+        {
+          "component_type": "storage",
+          "reason": "需要compute/database组件读取Iceberg表"
+        }
+      ]
+    },
+    "as_sink": {
+      "compatible_upstream": [
+        {
+          "component_type": "compute",
+          "examples": ["Spark", "Flink"],
+          "data_flow": "Spark -> Iceberg",
+          "api_mapping": {
+            "Spark": "df.write.format('iceberg').save(table)",
+            "Iceberg": "table.append(files)"
+          }
+        },
+        {
+          "component_type": "database",
+          "examples": ["StarRocks"],
+          "data_flow": "StarRocks -> Iceberg",
+          "api_mapping": {
+            "StarRocks": "INSERT INTO iceberg_table",
+            "Iceberg": "table.append()"
+          }
+        }
+      ]
+    }
+  },
+  
+  "valid_data_flows": [
+    "Iceberg -> Spark -> Iceberg",
+    "Iceberg -> StarRocks",
+    "StarRocks -> Iceberg",
+    "Iceberg -> Flink -> Iceberg",
+    "Iceberg -> Trino -> Iceberg"
+  ],
+  
+  "invalid_data_flows": [
+    "Iceberg -> Iceberg (直接交互无意义)",
+    "Iceberg -> HDFS (需通过compute)"
+  ],
+  
+  "core_concepts": {
+    "key_abstractions": [
+      {"name": "Table", "type": "DataUnit", "description": "Iceberg表，包含元数据和数据文件"},
+      {"name": "Snapshot", "type": "DataUnit", "description": "表的时间点快照"},
+      {"name": "Partition", "type": "Architecture", "description": "表的分区策略"},
+      {"name": "Schema", "type": "Config", "description": "表的列定义"},
+      {"name": "Catalog", "type": "Architecture", "description": "表的元数据存储（Hive/REST/Glue等）"},
+      {"name": "FileIO", "type": "API", "description": "数据文件读写接口"},
+      {"name": "Manifest", "type": "DataUnit", "description": "数据文件清单"},
+      {"name": "Metadata", "type": "Config", "description": "表元数据JSON文件"}
+    ],
+    "key_operations": [
+      "create_table",
+      "write_data",
+      "read_snapshot",
+      "time_travel",
+      "schema_evolution",
+      "partition_evolution",
+      "snapshot_management",
+      "expire_snapshots"
+    ]
+  },
+  
+  "test_scenarios": {
+    "functional": [
+      "创建Iceberg表",
+      "写入数据到Iceberg",
+      "读取Iceberg快照",
+      "Schema变更",
+      "分区管理",
+      "快照回滚"
+    ],
+    "integration": [
+      "Spark读取Iceberg",
+      "Flink写入Iceberg",
+      "StarRocks查询Iceberg外表",
+      "Trino查询Iceberg"
+    ],
+    "fault_tolerance": [
+      "表不存在错误",
+      "快照不存在",
+      "Catalog连接失败",
+      "文件损坏处理",
+      "并发写入冲突"
+    ],
+    "performance": [
+      "大规模写入性能",
+      "快照读取性能",
+      "分区查询优化",
+      "Manifest压缩"
+    ]
+  },
+  
+  "api_reference": {
+    "create_table": {
+      "api": "Catalog.createTable(identifier, schema, partitionSpec)",
+      "params": ["table_identifier", "schema", "partition_spec", "location"],
+      "returns": "Table object",
+      "example": "catalog.createTable(TableIdentifier.of('db', 'table'), schema, PartitionSpec.unpartitioned())"
+    },
+    "write_append": {
+      "api": "Table.newAppend().appendFile(file).commit()",
+      "params": ["data_files"],
+      "returns": "new snapshot",
+      "example": "table.newAppend().appendFile(dataFile).commit()"
+    },
+    "scan_read": {
+      "api": "Table.newScan().planFiles()",
+      "params": ["filter", "snapshot_id"],
+      "returns": "Iterable<FileScanTask>",
+      "example": "table.newScan().where(Expressions.equal('id', 1)).planFiles()"
+    },
+    "snapshot_list": {
+      "api": "Table.snapshots()",
+      "params": [],
+      "returns": "Iterable<Snapshot>",
+      "example": "for (Snapshot snap : table.snapshots()) { ... }"
+    },
+    "time_travel": {
+      "api": "Table.scan().useSnapshot(snapshotId)",
+      "params": ["snapshot_id", "timestamp"],
+      "returns": "TableScan",
+      "example": "table.newScan().useSnapshot(snapshotId).planFiles()"
+    },
+    "schema_evolution": {
+      "api": "Table.updateSchema().addColumn('name', Types.StringType.get()).commit()",
+      "params": ["schema_changes"],
+      "returns": "updated schema",
+      "example": "table.updateSchema().addColumn('new_col', Types.IntegerType.get()).commit()"
+    }
+  },
+  
+  "catalog_types": {
+    "hive_catalog": {
+      "description": "使用Hive Metastore作为Catalog",
+      "config": {"uri": "thrift://hive:9083", "warehouse": "hdfs://..."}
+    },
+    "rest_catalog": {
+      "description": "使用REST Catalog服务",
+      "config": {"uri": "http://rest-catalog:8181"}
+    },
+    "glue_catalog": {
+      "description": "使用AWS Glue作为Catalog",
+      "config": {"catalog-id": "account_id"}
+    }
+  },
+  
+  "data_requirements": {
+    "small": {"rows": 100, "files": 1, "purpose": "功能测试"},
+    "medium": {"rows": 100000, "files": 10, "purpose": "集成测试"},
+    "large": {"rows": 1000000, "files": 100, "purpose": "性能测试"}
+  },
+  
+  "environment_requirements": {
+    "iceberg": {
+      "version": "1.5.x",
+      "catalog": "hive or rest",
+      "warehouse": "s3 or hdfs"
+    },
+    "compute_engine": {
+      "spark": {"version": "3.x", "iceberg_spark_runtime": "required"},
+      "flink": {"version": "1.x", "iceberg_flink_runtime": "required"}
+    }
+  },
+  
+  "common_issues": [
+    {
+      "issue": "Catalog连接失败",
+      "symptom": "Cannot connect to Hive Metastore",
+      "cause": "Hive服务未启动或配置错误",
+      "solution": "检查Hive服务状态和配置"
+    },
+    {
+      "issue": "快照过期",
+      "symptom": "Snapshot not found",
+      "cause": "快照已被清理",
+      "solution": "调整expire_snapshots配置或使用当前快照"
+    },
+    {
+      "issue": "并发写入冲突",
+      "symptom": "Conflict on commit",
+      "cause": "多个写入同时提交",
+      "solution": "使用乐观锁重试或串行化写入"
+    }
+  ]
+}
